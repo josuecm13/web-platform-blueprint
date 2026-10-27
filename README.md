@@ -69,4 +69,12 @@ Scroll-driven animations, scroll-state container queries, anchored container que
 
 ## Status
 
-Planning and research. The initial issues establish the browser-feature catalog, the semantic app shell, and the first version of the Inspect / Reference Dock experience.
+The first version includes six static pages, a responsive component library, an interactive canvas and locally stored preferences. The Inspect / Reference Dock experience is tracked separately.
+
+## Run locally
+
+Requires Node.js. Run `npm install`, then `npm run dev` for development or `npm run build` followed by `npm run preview` for a production preview.
+
+The application uses real HTML documents and ordinary links. Core content and navigation remain available without JavaScript; filtering, canvas interaction and preference persistence progressively enhance the experience.
+
+Research: [platform catalog](docs/platform-catalog.md) and [CSS if() research](docs/css-if-research.md).
