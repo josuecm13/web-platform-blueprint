@@ -45,7 +45,7 @@ These are planned pages, not implemented routes. Component detail may have multi
 | Dialogs | dialog.showModal(), focus and Escape; component detail and mobile dock | Foundation | Dedicated inline content or page link if dialog unavailable | [dialog](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/dialog) |
 | Popovers | popovertarget for a non-modal action panel | Enhancement | Always-available inline links or disclosure | [Popover API](https://developer.mozilla.org/en-US/docs/Web/API/Popover_API) |
 | Anchor positioning | Position reference hint relative to its trigger | Enhancement | Inline or fixed-position panel; no lost content | [Anchor positioning](https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Anchor_positioning/Using) |
-| Invoker commands | commandfor and command for declarative dialog controls | Lab | Button listener calling showModal()/close() | [Invoker Commands](https://developer.mozilla.org/en-US/docs/Web/API/Invoker_Commands_API) |
+| Invoker commands | commandfor and command for declarative dialog controls | Enhancement | Button listener calling showModal()/close() | [Invoker Commands](https://developer.mozilla.org/en-US/docs/Web/API/Invoker_Commands_API) |
 | Customizable select | Native select with enhanced picker; preferences | Lab | Ordinary select, carefully test HTML parsing and support | [Customizable select](https://developer.mozilla.org/en-US/docs/Learn_web_development/Extensions/Forms/Customizable_select) |
 | Forms | labels, validation, fieldset, output, progress and meter | Foundation | Server-side or JS validation when applicable; semantic controls remain usable | [Forms](https://developer.mozilla.org/en-US/docs/Learn_web_development/Extensions/Forms) |
 | field-sizing | Content-sized textarea in preferences | Enhancement | Fixed minimum height and manual resize | [field-sizing](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/field-sizing) |
@@ -58,6 +58,34 @@ These are planned pages, not implemented routes. Component detail may have multi
 | Rendering performance | content-visibility and contain-intrinsic-size for long lists | Enhancement | Render normally; measure layout shifts and interaction | [content-visibility](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/content-visibility) |
 | Observers | ResizeObserver for canvas; IntersectionObserver when needed | Enhancement | Initial rendering or manual refresh; clean up observers | [ResizeObserver](https://developer.mozilla.org/en-US/docs/Web/API/ResizeObserver), [IntersectionObserver](https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API) |
 | Reduced motion | prefers-reduced-motion and app preference | Foundation | Static states; animation never conveys the only information | [prefers-reduced-motion](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/At-rules/@media/prefers-reduced-motion) |
+
+
+## Expanded survey: recent platform features (2024–2026)
+
+Research snapshot: 2026-10-26. Dates below indicate Baseline milestones or introduction reports, not universal support in all deployed browser versions. Test specific subfeatures before adopting.
+
+| Feature | Potential implementation | Project tier and fallback | Reference |
+| --- | --- | --- | --- |
+| text-wrap: balance (Baseline 2024) | Balanced hero headings | Enhancement; normal wrapping | [Interop 2024](https://web.dev/blog/interop-2024-wrapup) |
+| light-dark() (Baseline 2024) | Neutral light/dark tokens in Preferences | Enhancement; explicit colors and color-scheme fallback | [light-dark()](https://web.dev/articles/light-dark) |
+| @property (Baseline 2024) | Typed custom properties for a controlled motion specimen | Enhancement; ordinary custom property or static visual | [Interop 2024](https://web.dev/blog/interop-2024-wrapup) |
+| ::details-content (Baseline 2025) | Style disclosure contents in component detail | Enhancement; normal details rendering | [Baseline 2025](https://web.dev/baseline/2025) |
+| Invoker commands (Baseline 2025) | Declarative dialog actions | Enhancement for supported syntax; JS showModal/close fallback; verify exact command. This supersedes its conservative Lab placement above. | [Baseline 2025](https://web.dev/baseline/2025) |
+| field-sizing and style queries (Baseline 2026) | Resizable note field and density-aware card | Enhancement; fixed height and default card styles | [Baseline 2026](https://web.dev/baseline/2026) |
+| CSS scroll buttons and markers | Library carousel specimen with native scrolling | Lab; ordinary scrollable list and accessible HTML controls | [CSS carousels](https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Overflow/Carousels) |
+| sibling-index() and sibling-count() | Staggered card sequences without per-item inline indices | Enhancement; uniform timing or explicit index; verify each function | [June 2025 platform update](https://web.dev/blog/web-platform-06-2025), [August 2026 digest](https://web.dev/blog/baseline-digest-aug-2026) |
+| CSS if() and typed attr() | Experiment with declarative variants driven by attributes | Lab; conventional selectors and custom properties | [May 2025 update](https://web.dev/blog/web-platform-05-2025), [February 2025 update](https://web.dev/blog/web-platform-02-2025) |
+| shape() | Responsive clipped shape or path in Playground | Enhancement; rectangular clipping or static shape | [February 2026 update](https://web.dev/blog/web-platform-02-2026) |
+| URLPattern (Baseline 2025) | Optional matching for specimen URLs or test harness | Enhancement; simple URL parsing; avoid adding a router solely for this | [URL Pattern API](https://developer.mozilla.org/en-US/docs/Web/API/URL_Pattern_API) |
+| Navigation API (Baseline 2026) | Isolated comparison of navigation handling | Lab; ordinary links and real MPA navigation; API is mainly aimed at SPAs | [Navigation API](https://developer.mozilla.org/en-US/docs/Web/API/Navigation_API) |
+| Prioritized Task Scheduling | Optional background indexing of a large catalog | Lab; small tasks via ordinary scheduling; benchmark first | [Scheduler](https://developer.mozilla.org/en-US/docs/Web/API/Scheduler) |
+| Declarative Shadow DOM | Research encapsulated server-rendered specimen as an alternative, not a mandatory architecture | Lab; ordinary semantic HTML | [Baseline 2024 overview](https://web.dev/blog/baseline-project-2024) |
+
+### Research decisions
+
+Media queries remain important for viewport and user preferences; container queries address component context. Native commands, popovers and dialogs have different semantics and require independent accessibility and support testing. CSS carousels must be tested for keyboard navigation and a usable fallback rather than assumed accessible. New APIs are candidates, not requirements: for example Navigation API does not justify converting the planned multi-page application to an SPA.
+
+For each candidate, record the exact feature, tested browser versions, date, screenshot or reproduction, accessibility result and fallback. Interop and Baseline milestone lists are discovery tools, not proof that every related syntax behaves identically.
 
 ## First 12 specimens
 
