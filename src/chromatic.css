@@ -1,0 +1,27 @@
+.chromatic-page-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  touch-action: auto;
+}
+.chromatic-page-source { display: flow-root; }
+.chromatic-settings {
+  position: fixed;
+  z-index: 100;
+  right: 1rem;
+  bottom: 1rem;
+  max-width: min(21rem, calc(100vw - 2rem));
+  padding: .75rem 1rem;
+  border: 1px solid #b8bdb4;
+  background: #fafbf8;
+  color: #232622;
+  box-shadow: 0 3px 18px #0002;
+  font-size: .8rem;
+}
+.chromatic-settings summary { font-size: .8rem; }
+.chromatic-settings label { display: block; margin-top: 1rem; }
+.chromatic-settings input { max-width: 70%; vertical-align: middle; }
+.chromatic-settings p { max-width: 28em; font-size: .75rem; }
+@media print {
+  .chromatic-settings { display: none; }
+}

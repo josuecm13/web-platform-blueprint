@@ -71,6 +71,10 @@ Scroll-driven animations, scroll-state container queries, anchored container que
 
 The first version includes six static pages, a responsive component library, an interactive canvas and locally stored preferences. The Inspect / Reference Dock experience is tracked separately.
 
+All pages include a chromatic aberration experiment using [HTML-in-Canvas](https://developer.chrome.com/docs/web-platform/html-in-canvas). Open the bottom-right control to adjust the RGB channel split (0 removes it), or choose **Use normal HTML** to restore ordinary DOM rendering. On supporting browsers, the whole page's real HTML is drawn into a canvas; unsupported browsers and rendering errors retain ordinary HTML. The effect redraws on demand, without automatic animation. Browser interaction, accessibility, and performance on long pages still need browser verification. The implementation targets the current `content="drawable"` / `drawable` API rather than the older `layoutsubtree` prototype.
+
+This expands the Playground scope of [issue #5](https://github.com/josuecm13/web-platform-blueprint/issues/5) to the whole page at the project owner's request. It does not complete that issue's Reference Dock or browser verification requirements. See [implementation and validation notes](docs/html-in-canvas.md).
+
 ## Run locally
 
 Requires Node.js. Run `npm install`, then `npm run dev` for development or `npm run build` followed by `npm run preview` for a production preview.
