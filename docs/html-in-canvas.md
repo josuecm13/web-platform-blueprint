@@ -6,9 +6,11 @@ The project owner requested chromatic aberration across the whole page, expandin
 
 ## Coordinate mapping
 
-The canvas CSS box matches the page's CSS width and height. Its bitmap dimensions are those dimensions multiplied by devicePixelRatio, rounded to integers. The 2D context uses an identity transform and `drawElementImage(source, 0, 0, canvas.width, canvas.height)`.
+The canvas CSS box matches the page's CSS border-box width and height. Its bitmap dimensions are those dimensions multiplied by devicePixelRatio, rounded to integers. The 2D context uses an identity transform and `drawElementImage(source, 0, 0, canvas.width, canvas.height, { preserveElementGeometry: true })`.
 
-The explicit destination uses canvas-grid pixels. The browser automatically maps the element's geometry back through the canvas CSS box for hit testing. Applying an additional DPR transform to the API's default raster dimensions caused the original zoom and click-position bug. Pixel processing shifts only red and blue channel values; it does not move the page geometry.
+The explicit destination uses canvas-grid pixels. After pixel processing, `canvas.updateElementGeometry(source, { canvasTransform: new DOMMatrix() })` explicitly registers the live subtree at its original CSS position. The identity mapping is deliberate: the source border box and canvas CSS box have the same dimensions. Geometry is registered even when the split is zero. The implementation requires this explicit geometry API and falls back to ordinary HTML if it is missing. No pointer events are synthesized or forwarded; the original nodes retain native behavior.
+
+Applying an additional DPR transform to the API's default raster dimensions caused the original zoom and click-position bug. Pixel processing shifts only red and blue channel values; it does not move the page geometry. Pixel readback and processing are restricted to visible rows to avoid copying an entire long page on every hover or focus repaint. Scrolling requests a new paint for the newly visible rows.
 
 Primary references, checked 2026-10-27:
 
@@ -22,6 +24,6 @@ The target is the current `content="drawable"` API with `requestPaint()` and `dr
 
 Run `node --test tests/chromatic.test.mjs` and `npm run build`.
 
-The browser-free tests execute the actual module with a DOM/canvas model. They check rendered bounds and coordinate round trips at DPR 1, 1.25, 2 and 3, a density change, preservation of the original interactive nodes when restoring ordinary HTML, and unsupported-browser fallback. These tests do not exercise Chromium's native hit-testing implementation.
+The browser-free tests execute the actual module with a DOM/canvas model. They check rendered bounds and explicit geometry registration with the effect active at DPR 1, 1.25, 2 and 3, a density change, channel output, geometry registration at zero split, visible-row processing on a scrolled long page, preservation of the original interactive nodes when restoring ordinary HTML, and unsupported-browser fallback. These tests do not exercise Chromium's native hit-testing implementation. The initial six-test suite used a zero split and did not cover active pixel postprocessing.
 
 Browser verification is pending at the owner's instruction. Do not treat the model tests as evidence that browser clicks, keyboard focus, text selection, native dialogs, accessibility geometry, scrolling, printing or long-page rendering performance have passed. The Reference Dock integration from issue #5 is also outstanding. There is no continuous animation loop; reduced-motion and preference behavior still need browser verification alongside the rest of the page.

@@ -15,6 +15,10 @@ const script = ts.transpileModule(
 function setup(dpr, supported = true) {
   let observer;
   let destination;
+  let geometry;
+  let processed;
+  let readback;
+  const operations = [];
   let transform = [1, 0, 0, 1, 0, 0];
   const context = {
     setTransform(...args) { transform = args; },
@@ -22,9 +26,23 @@ function setup(dpr, supported = true) {
     // Model the API's default raster size as CSS size × DPR. This reproduces
     // the previous double-scaling bug if destination dimensions are omitted.
     drawElementImage(element, x, y, width = element.offsetWidth * dpr,
-      height = element.scrollHeight * dpr) {
+      height = element.offsetHeight * dpr, options) {
       destination = { x, y, width, height, transform: [...transform] };
+      assert.equal(options.preserveElementGeometry, true);
+      operations.push('draw');
     },
+    getImageData(x, y, width, height) {
+      readback = { x, y, width, height };
+      const data = new Uint8ClampedArray(width * height * 4);
+      for (let n = 0; n < width * height; n++) {
+        data[n * 4] = (n % width) % 256;
+        data[n * 4 + 1] = 60;
+        data[n * 4 + 2] = ((n % width) + 80) % 256;
+        data[n * 4 + 3] = 255;
+      }
+      return { width, height, data };
+    },
+    putImageData(image) { processed = image; operations.push('pixels'); },
   };
   class Element {
     style = {};
@@ -33,7 +51,8 @@ function setup(dpr, supported = true) {
     content = '';
     offsetWidth = 321;
     scrollHeight = 123;
-    value = '0'; // Coordinate tests do not need to allocate pixel buffers.
+    offsetHeight = 123;
+    value = '2';
     fields = {};
     setAttribute(name, value) { this[name] = value; }
     getContext() { return context; }
@@ -58,16 +77,23 @@ function setup(dpr, supported = true) {
     querySelector(selector) { return this.fields[selector] ??= new Element(); }
     addEventListener(name, listener) { this.listeners[name] = listener; }
     requestPaint() {} // Paint is asynchronous, explicitly dispatched by tests.
+    updateElementGeometry(element, options) {
+      geometry = { element, matrix: options.canvasTransform };
+      operations.push('geometry');
+    }
+    getBoundingClientRect() { return { top: 0, height: 123 }; }
   }
   if (!supported) delete Element.prototype.requestPaint;
   const body = new Element();
   const link = new Element();
   body.append(link);
-  const window = { devicePixelRatio: dpr, addEventListener() {} };
+  const window = { devicePixelRatio: dpr, innerHeight: 900, listeners: {},
+    addEventListener(name, callback) { this.listeners[name] = callback; } };
   vm.runInNewContext(script, {
     document: { body, documentElement: { clientWidth: 321 }, createElement: () => new Element() },
     window,
     getComputedStyle: () => ({ backgroundColor: '#fff' }),
+    DOMMatrix: class { a = 1; b = 0; c = 0; d = 1; e = 0; f = 0; },
     ResizeObserver: class {
       disconnected = false;
       constructor(callback) { this.callback = callback; observer = this; }
@@ -75,14 +101,20 @@ function setup(dpr, supported = true) {
       disconnect() { this.disconnected = true; }
     },
   });
-  return { body, link, window, observer, get destination() { return destination; } };
+  return { body, link, window, observer, operations,
+    get destination() { return destination; }, get geometry() { return geometry; },
+    get processed() { return processed; }, get readback() { return readback; } };
 }
 
 for (const dpr of [1, 1.25, 2, 3]) {
-  test(`rendered bounds and click coordinates stay aligned at DPR ${dpr}`, () => {
+  test(`active effect keeps CSS bounds and explicit input geometry at DPR ${dpr}`, () => {
     const app = setup(dpr);
     const [surface] = app.body.childNodes;
     surface.listeners.paint();
+    assert.deepEqual(app.operations, ['draw', 'pixels', 'geometry']);
+    assert.equal(app.geometry.element, surface.childNodes[0]);
+    const matrix = app.geometry.matrix;
+    assert.deepEqual([matrix.a, matrix.b, matrix.c, matrix.d, matrix.e, matrix.f], [1, 0, 0, 1, 0, 0]);
     const { width, height, transform } = app.destination;
     const cssWidth = parseFloat(surface.style.width);
     const cssHeight = parseFloat(surface.style.height);
@@ -109,6 +141,46 @@ test('normal HTML recovery preserves the original interactive nodes', () => {
   assert.equal(app.body.childNodes[0].childNodes[0], app.link);
   assert.equal(app.observer.disconnected, true);
   assert.equal(controls.querySelector('input').disabled, true);
+});
+
+test('active split changes pixels while preserving green, alpha and input geometry', () => {
+  const app = setup(2);
+  const [surface] = app.body.childNodes;
+  surface.listeners.paint();
+  const { data, width } = app.processed;
+  // The 2 CSS px setting is a 4 bitmap-pixel split at DPR 2.
+  assert.equal(data[10 * 4], 6);
+  assert.equal(data[10 * 4 + 2], 94);
+  assert.equal(data[10 * 4 + 1], 60);
+  assert.equal(data[10 * 4 + 3], 255);
+  assert.equal(data[0], 0);
+  assert.equal(data[(width - 1) * 4 + 2], (width - 1 + 80) % 256);
+  assert.equal(app.geometry.element.childNodes[0], app.link);
+});
+
+test('zero split still registers the live subtree for native interaction', () => {
+  const app = setup(2);
+  const [surface, controls] = app.body.childNodes;
+  controls.querySelector('input').value = '0';
+  surface.listeners.paint();
+  assert.deepEqual(app.operations, ['draw', 'geometry']);
+  assert.equal(app.geometry.element.childNodes[0], app.link);
+});
+
+test('a long page processes only visible rows and requests repaint when scrolled', () => {
+  const app = setup(2);
+  const [surface] = app.body.childNodes;
+  surface.childNodes[0].offsetHeight = 10000;
+  app.observer.callback();
+  surface.getBoundingClientRect = () => ({ top: -2000, height: 10000 });
+  surface.listeners.paint();
+  assert.equal(app.readback.y, 4000);
+  assert.equal(app.readback.height, 1800);
+  assert.equal(app.operations.at(-1), 'geometry');
+  let requested = false;
+  surface.requestPaint = () => { requested = true; };
+  app.window.listeners.scroll();
+  assert.equal(requested, true);
 });
 
 test('unsupported browsers leave page nodes in the ordinary DOM', () => {

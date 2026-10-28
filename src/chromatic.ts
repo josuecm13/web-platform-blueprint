@@ -2,15 +2,20 @@ import './chromatic.css';
 
 // Keep the real DOM as the source, including links, forms and the canvas board.
 // API reference: https://developer.chrome.com/docs/web-platform/html-in-canvas/2d
-type DrawableCanvas = HTMLCanvasElement & { requestPaint?: () => void };
+type DrawableCanvas = HTMLCanvasElement & {
+  requestPaint?: () => void;
+  updateElementGeometry?: (element: HTMLElement, options: { canvasTransform: DOMMatrix }) => void;
+};
 type DrawableContext = CanvasRenderingContext2D & {
-  drawElementImage?: (element: HTMLElement, x: number, y: number, width: number, height: number) => void;
+  drawElementImage?: (element: HTMLElement, x: number, y: number, width: number, height: number,
+    options: { preserveElementGeometry: boolean }) => void;
 };
 
 const surface = document.createElement('canvas') as DrawableCanvas;
 surface.setAttribute('content', 'drawable');
 const context = surface.getContext('2d', { willReadFrequently: true }) as DrawableContext | null;
 const supported = 'content' in surface && typeof surface.requestPaint === 'function'
+  && typeof surface.updateElementGeometry === 'function'
   && typeof context?.drawElementImage === 'function';
 const controls = document.createElement('details');
 controls.className = 'chromatic-settings';
@@ -62,7 +67,8 @@ if (!supported || !context) {
     if (failed) return;
     source.style.width = `${document.documentElement.clientWidth}px`;
     ratio = window.devicePixelRatio || 1;
-    const height = Math.ceil(source.scrollHeight);
+    // The drawable snapshot is the border box, not the scrollable overflow.
+    const height = source.offsetHeight;
     const width = Math.round(source.offsetWidth * ratio);
     const pixelsHigh = Math.round(height * ratio);
     // CSS layout stays in CSS pixels; only the backing bitmap uses device pixels.
@@ -81,24 +87,39 @@ if (!supported || !context) {
       // drawElementImage's default size is already in canvas-grid pixels.
       // Applying the DPR transform again zooms the page and its hit geometry.
       // Use an identity transform and an explicit destination covering the bitmap.
-      // The API maps that destination back to the canvas's CSS box for hit testing.
+      // Geometry is registered explicitly below, in CSS pixels (not bitmap pixels).
       context!.setTransform(1, 0, 0, 1, 0, 0);
       context!.clearRect(0, 0, surface.width, surface.height);
-      context!.drawElementImage!(source, 0, 0, surface.width, surface.height);
+      context!.drawElementImage!(source, 0, 0, surface.width, surface.height,
+        { preserveElementGeometry: true });
       const split = Math.round(Number(slider.value) * ratio);
-      if (!split) return;
-      const image = context!.getImageData(0, 0, surface.width, surface.height);
-      const original = new Uint8ClampedArray(image.data);
-      // Shift only color channels; preserve green, alpha and DOM hit geometry.
-      for (let y = 0; y < image.height; y++) {
-        const row = y * image.width;
-        for (let x = 0; x < image.width; x++) {
-          const pixel = (row + x) * 4;
-          image.data[pixel] = original[(row + Math.max(0, x - split)) * 4];
-          image.data[pixel + 2] = original[(row + Math.min(image.width - 1, x + split)) * 4 + 2];
+      if (split) {
+        // Process only visible rows. Reading and copying an entire long page on
+        // every hover/focus repaint can monopolize the main thread and stall input.
+        const rect = surface.getBoundingClientRect();
+        const scaleY = surface.height / rect.height;
+        const top = Math.max(0, Math.floor(-rect.top * scaleY));
+        const bottom = Math.min(surface.height, Math.ceil((window.innerHeight - rect.top) * scaleY));
+        if (bottom > top) {
+          const image = context!.getImageData(0, top, surface.width, bottom - top);
+          const original = new Uint8ClampedArray(image.data);
+          // Shift only color channels; preserve green, alpha and DOM hit geometry.
+          for (let y = 0; y < image.height; y++) {
+            const row = y * image.width;
+            for (let x = 0; x < image.width; x++) {
+              const pixel = (row + x) * 4;
+              image.data[pixel] = original[(row + Math.max(0, x - split)) * 4];
+              image.data[pixel + 2] = original[(row + Math.min(image.width - 1, x + split)) * 4 + 2];
+            }
+          }
+          context!.putImageData(image, 0, top);
         }
       }
-      context!.putImageData(image, 0, 0);
+      // Pixels and input geometry are separate responsibilities. The full-page
+      // source and canvas have identical CSS boxes, so their mapping is identity.
+      // Register the live subtree after postprocessing, including at split zero.
+      // Native events, focus and selection remain with the original DOM nodes.
+      surface.updateElementGeometry!(source, { canvasTransform: new DOMMatrix() });
     } catch {
       fallback();
     }
@@ -115,6 +136,9 @@ if (!supported || !context) {
   const observer = new ResizeObserver(resize);
   observer.observe(source);
   window.addEventListener('resize', resize);
+  window.addEventListener('scroll', () => {
+    if (!failed) surface.requestPaint!();
+  }, { passive: true });
   // Restore observers after back/forward cache navigation without a render loop.
   window.addEventListener('pageshow', resize);
   resize();
