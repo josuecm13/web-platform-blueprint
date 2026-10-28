@@ -4,6 +4,8 @@ Related: [issue #5](https://github.com/josuecm13/web-platform-blueprint/issues/5
 
 The project owner requested chromatic aberration across the whole page, expanding the original Playground-only proposal. The original page nodes, including their listeners, become a single drawable subtree. The Playground board retains its own rendering code. Controls outside the canvas adjust the channel split and restore ordinary HTML.
 
+The entry module in each document's head uses `blocking="render"` so initialization can move HTML into the canvas before the first paint. This avoids first showing normal HTML and then replacing it with an unpainted canvas. Vite recreates entry script tags during bundling, so the build's final HTML transform preserves the render-blocking attribute. This can delay first paint until the small entry module loads; no CSS hides the page, so script failure or disabled JavaScript does not leave content hidden. See [the script blocking attribute](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/script#blocking). Visual confirmation in a browser remains pending.
+
 ## Coordinate mapping
 
 The canvas CSS box matches the page's CSS border-box width and height. Its bitmap dimensions are those dimensions multiplied by devicePixelRatio, rounded to integers. The 2D context uses an identity transform and `drawElementImage(source, 0, 0, canvas.width, canvas.height, { preserveElementGeometry: true })`.
