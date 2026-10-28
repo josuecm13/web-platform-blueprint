@@ -24,10 +24,16 @@ Primary references, checked 2026-10-27:
 
 The target is the current `content="drawable"` API with `requestPaint()` and `drawElementImage()`, not the older `layoutsubtree` prototype. Older implementations fall back to ordinary HTML; no origin-trial or deployment registration is configured.
 
+## Navigation glitch
+
+A left click or Enter on a link to another page of this site is held for 420 ms. During that time animation frames raise a glitch strength from 0 to 1. Each paint adds up to 14 px to the slider's channel split. It also moves a few random horizontal bands of rows sideways (all channels, up to 40 px), and the canvas gets a random `translate` shake of up to 8 px. Then the browser navigates. A sessionStorage flag makes the next page play a 320 ms decaying version on arrival.
+
+Modified clicks, middle clicks, `target` other than `_self`, `download`, external links and same-page links keep native behavior. So does reduced motion, from `prefers-reduced-motion` or the Preferences page's `data-motion="reduce"`. Animation frames only run while a glitch plays. The torn rows are pixels only: input geometry stays at its original position, and the page leaves before anyone can click on the moved image.
+
 ## Validation
 
 Run `node --test tests/chromatic.test.mjs` and `npm run build`.
 
 The browser-free tests execute the actual module with a DOM/canvas model. They check rendered bounds and explicit geometry registration with the effect active at DPR 1, 1.25, 2 and 3, a density change, channel output, geometry registration at zero split, visible-row processing on a scrolled long page, preservation of the original interactive nodes when restoring ordinary HTML, and unsupported-browser fallback. These tests do not exercise Chromium's native hit-testing implementation. The initial six-test suite used a zero split and did not cover active pixel postprocessing.
 
-Browser verification is pending at the owner's instruction. Do not treat the model tests as evidence that browser clicks, keyboard focus, text selection, native dialogs, accessibility geometry, scrolling, printing or long-page rendering performance have passed. The Reference Dock integration from issue #5 is also outstanding. There is no continuous animation loop; reduced-motion and preference behavior still need browser verification alongside the rest of the page.
+Browser verification is pending at the owner's instruction. Do not treat the model tests as evidence that browser clicks, keyboard focus, text selection, native dialogs, accessibility geometry, scrolling, printing or long-page rendering performance have passed. The Reference Dock integration from issue #5 is also outstanding. There is no continuous animation loop outside the navigation glitch; reduced-motion and preference behavior still need browser verification alongside the rest of the page.

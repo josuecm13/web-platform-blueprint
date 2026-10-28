@@ -12,7 +12,7 @@ const script = ts.transpileModule(
   { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None } },
 ).outputText;
 
-function setup(dpr, supported = true) {
+function setup(dpr, supported = true, env = {}) {
   let observer;
   let destination;
   let geometry;
@@ -96,9 +96,23 @@ function setup(dpr, supported = true) {
   body.append(link);
   const window = { devicePixelRatio: dpr, innerHeight: 900, listeners: {},
     addEventListener(name, callback) { this.listeners[name] = callback; } };
-  vm.runInNewContext(script, {
-    document: { body, documentElement: { clientWidth: 321 }, createElement: () => new Element() },
+  const document = { body, documentElement: { clientWidth: 321, dataset: {} }, listeners: {},
+    createElement: () => new Element(),
+    addEventListener(name, callback) { this.listeners[name] = callback; } };
+  const frames = [];
+  const storage = new Map(Object.entries(env.storage ?? {}));
+  const location = { href: 'http://localhost/library/', origin: 'http://localhost',
+    pathname: '/library/', search: '', assigned: null, assign(url) { this.assigned = url; } };
+  window.matchMedia = () => ({ matches: env.reducedMotion ?? false });
+  const sandbox = vm.createContext({
+    document,
     window,
+    location,
+    URL,
+    performance: { now: () => 0 },
+    requestAnimationFrame: callback => frames.push(callback),
+    sessionStorage: { getItem: key => storage.get(key) ?? null, setItem: (key, value) => storage.set(key, value),
+      removeItem: key => storage.delete(key) },
     getComputedStyle: () => ({ backgroundColor: '#fff' }),
     DOMMatrix: class { a = 1; b = 0; c = 0; d = 1; e = 0; f = 0; },
     ResizeObserver: class {
@@ -108,7 +122,13 @@ function setup(dpr, supported = true) {
       disconnect() { this.disconnected = true; }
     },
   });
-  return { body, link, window, observer, operations,
+  // A fixed Math.random makes glitch strength, tears and shake reproducible.
+  if (env.random) {
+    sandbox.random = env.random;
+    vm.runInContext('Math.random = random;', sandbox);
+  }
+  vm.runInContext(script, sandbox);
+  return { body, link, window, document, location, frames, storage, observer, operations,
     get destination() { return destination; }, get geometry() { return geometry; },
     get processed() { return processed; }, get readback() { return readback; } };
 }
@@ -222,4 +242,86 @@ test('responsive layout changes keep the previous bitmap until a fresh paint', (
   surface.listeners.paint();
   surface.listeners.paint();
   assert.deepEqual(surface.dimensionWrites, []);
+});
+
+// Run queued animation frames at the given timestamps (ms since the glitch started).
+function runFrames(app, times) {
+  for (const time of times) {
+    const pending = app.frames.splice(0);
+    for (const frame of pending) frame(time);
+  }
+}
+
+function click(app, href, init = {}) {
+  let prevented = false;
+  const anchor = { href: new URL(href, app.location.href).href, target: init.target ?? '',
+    closest() { return this; }, hasAttribute: name => name === 'download' && Boolean(init.download) };
+  app.document.listeners.click({ target: anchor, button: init.button ?? 0, defaultPrevented: false,
+    metaKey: Boolean(init.metaKey), ctrlKey: false, shiftKey: false, altKey: false,
+    preventDefault() { prevented = true; } });
+  return prevented;
+}
+
+const SHAKE = /^-?\d+(\.\d+)?px -?\d+(\.\d+)?px$/;
+
+test('a same-site link glitches with a wider split, then navigates', () => {
+  // random 0.5: strength factor 0.8, no row tearing, no shake offset.
+  const app = setup(1, true, { random: () => 0.5 });
+  const [surface] = app.body.childNodes;
+  assert.equal(click(app, '/workspace/'), true);
+  assert.equal(app.location.assigned, null);
+  assert.equal(app.storage.get('blueprint-glitch'), '1');
+  runFrames(app, [200]);
+  surface.listeners.paint();
+  // At 200 of 420 ms the strength is min(1, 200/420 × 1.6) × 0.8 ≈ 0.61, so the
+  // split is round(2 + 0.61 × 14) = 11 px: red at x=100 samples x=89 on every row.
+  const { data, width, height } = app.processed;
+  for (let y = 0; y < height; y++) assert.equal(data[(y * width + 100) * 4], 89);
+  runFrames(app, [420]);
+  assert.equal(app.location.assigned, 'http://localhost/workspace/');
+});
+
+test('the glitch shakes the canvas and tears rows sideways', () => {
+  let n = 0;
+  const sequence = [0.9, 0.2, 0.7, 0.1, 0.95, 0.4];
+  const app = setup(1, true, { random: () => sequence[n++ % sequence.length] });
+  const [surface] = app.body.childNodes;
+  click(app, '/workspace/');
+  runFrames(app, [300]);
+  assert.match(surface.style.translate, SHAKE);
+  assert.notEqual(surface.style.translate, '0px 0px');
+  surface.listeners.paint();
+  // Every row of the model has the same pixels, so an untorn page has identical
+  // red values down a column. A torn row slid sideways and differs.
+  const { data, width, height } = app.processed;
+  let torn = 0;
+  for (let y = 0; y < height; y++) if (data[(y * width + 100) * 4] !== data[100 * 4]) torn++;
+  assert.ok(torn > 0);
+});
+
+test('modified, new-tab, download, external and same-page links keep native navigation', () => {
+  const app = setup(1);
+  assert.equal(click(app, '/workspace/', { metaKey: true }), false);
+  assert.equal(click(app, '/workspace/', { button: 1 }), false);
+  assert.equal(click(app, '/workspace/', { target: '_blank' }), false);
+  assert.equal(click(app, '/workspace/', { download: true }), false);
+  assert.equal(click(app, 'https://developer.mozilla.org/'), false);
+  assert.equal(click(app, '/library/#filters'), false);
+  assert.equal(app.frames.length, 0);
+});
+
+test('reduced motion navigates without a glitch', () => {
+  const app = setup(1, true, { reducedMotion: true });
+  assert.equal(click(app, '/workspace/'), false);
+  assert.equal(app.frames.length, 0);
+});
+
+test('arriving from a glitched navigation settles back to the slider split', () => {
+  const app = setup(1, true, { storage: { 'blueprint-glitch': '1' } });
+  const [surface] = app.body.childNodes;
+  assert.equal(app.storage.has('blueprint-glitch'), false);
+  runFrames(app, [100]);
+  assert.match(surface.style.translate, SHAKE);
+  runFrames(app, [320]);
+  assert.equal(surface.style.translate, '');
 });
