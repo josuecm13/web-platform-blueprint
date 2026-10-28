@@ -45,6 +45,13 @@ function setup(dpr, supported = true) {
     putImageData(image) { processed = image; operations.push('pixels'); },
   };
   class Element {
+    _width = 300;
+    _height = 150;
+    dimensionWrites = [];
+    get width() { return this._width; }
+    set width(value) { this._width = value; this.dimensionWrites.push(['width', value]); }
+    get height() { return this._height; }
+    set height(value) { this._height = value; this.dimensionWrites.push(['height', value]); }
     style = {};
     childNodes = [];
     listeners = {};
@@ -188,4 +195,31 @@ test('unsupported browsers leave page nodes in the ordinary DOM', () => {
   assert.equal(app.body.childNodes[0], app.link);
   const controls = app.body.childNodes[1];
   assert.equal(controls.querySelector('input').disabled, true);
+});
+
+test('responsive layout changes keep the previous bitmap until a fresh paint', () => {
+  const app = setup(2);
+  const [surface] = app.body.childNodes;
+  surface.listeners.paint();
+  const oldHeight = surface.height;
+  surface.dimensionWrites.length = 0;
+  const source = surface.childNodes[0];
+  // Multiple container reflows before paint must not clear the displayed bitmap.
+  source.offsetHeight = 240;
+  app.observer.callback();
+  source.offsetHeight = 300;
+  app.observer.callback();
+  assert.equal(surface.height, oldHeight);
+  assert.deepEqual(surface.dimensionWrites, []);
+  // A fresh snapshot is available: resize only the changed axis and draw now.
+  surface.listeners.paint();
+  assert.deepEqual(surface.dimensionWrites, [['height', 600]]);
+  assert.equal(app.destination.height, 600);
+  assert.equal(app.operations.at(-1), 'geometry');
+  // Repeated notifications and ordinary hover/scroll paints must not reset it.
+  surface.dimensionWrites.length = 0;
+  app.observer.callback();
+  surface.listeners.paint();
+  surface.listeners.paint();
+  assert.deepEqual(surface.dimensionWrites, []);
 });

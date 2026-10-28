@@ -49,6 +49,8 @@ if (!supported || !context) {
   status.textContent = 'Applied to the whole page. Set the split to 0 to remove the effect.';
   let failed = false;
   let ratio = window.devicePixelRatio || 1;
+  let pendingWidth = 0;
+  let pendingHeight = 0;
 
   function fallback() {
     if (failed) return;
@@ -69,21 +71,24 @@ if (!supported || !context) {
     ratio = window.devicePixelRatio || 1;
     // The drawable snapshot is the border box, not the scrollable overflow.
     const height = source.offsetHeight;
-    const width = Math.round(source.offsetWidth * ratio);
-    const pixelsHigh = Math.round(height * ratio);
+    pendingWidth = Math.round(source.offsetWidth * ratio);
+    pendingHeight = Math.round(height * ratio);
     // CSS layout stays in CSS pixels; only the backing bitmap uses device pixels.
     surface.style.width = `${source.offsetWidth}px`;
     surface.style.height = `${height}px`;
-    if (surface.width !== width || surface.height !== pixelsHigh) {
-      surface.width = width;
-      surface.height = pixelsHigh;
-    }
+    // Keep the previous bitmap visible until the paint event has a fresh DOM
+    // snapshot. Assigning width/height here clears it while that paint is pending.
     surface.requestPaint!();
   }
 
   surface.addEventListener('paint', () => {
     if (failed) return;
     try {
+      // Commit sizing and drawing in the same callback, with no empty frame
+      // between them. Repeated resize notifications collapse to the latest size.
+      // Changing either attribute clears the bitmap, even at the same value.
+      if (surface.width !== pendingWidth) surface.width = pendingWidth;
+      if (surface.height !== pendingHeight) surface.height = pendingHeight;
       // drawElementImage's default size is already in canvas-grid pixels.
       // Applying the DPR transform again zooms the page and its hit geometry.
       // Use an identity transform and an explicit destination covering the bitmap.

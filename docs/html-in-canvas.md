@@ -14,6 +14,8 @@ The explicit destination uses canvas-grid pixels. After pixel processing, `canva
 
 Applying an additional DPR transform to the API's default raster dimensions caused the original zoom and click-position bug. Pixel processing shifts only red and blue channel values; it does not move the page geometry. Pixel readback and processing are restricted to visible rows to avoid copying an entire long page on every hover or focus repaint. Scrolling requests a new paint for the newly visible rows.
 
+Resize notifications update CSS dimensions and record the latest requested bitmap size, without clearing the displayed bitmap. The `paint` callback commits only changed bitmap dimensions and immediately draws the fresh snapshot. This removes the clear-and-wait gap when the responsive card changes the page height and coalesces multiple reflows before the next paint. Until then, the previous bitmap may briefly scale to the new CSS box. A regression check verifies that resize notifications do not reset the bitmap and that unchanged dimensions are not reassigned.
+
 Primary references, checked 2026-10-27:
 
 - [Chrome: sizing, coordinate units, geometry and feature detection](https://developer.chrome.com/docs/web-platform/html-in-canvas/concepts)
