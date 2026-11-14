@@ -1,2 +1,76 @@
 <!doctype html>
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="A native-first field guide to the web platform."><title>workspace — Web Platform Blueprint</title><link rel="stylesheet" href="../src/style.css"><script type="module" blocking="render" src="../src/main.ts"></script></head><body><a class="skip" href="#main">Skip to content</a><header class="site-header"><a class="brand" href="../"><span class="brand-mark">✳</span><span>WEB PLATFORM<br><b>BLUEPRINT</b></span></a><nav aria-label="Main navigation"><a href="../">Home</a><a href="../library/">Library</a><a href="../workspace/" aria-current="page">Workspace</a><a href="../components/">Components</a><a href="../playground/">Playground</a><a href="../preferences/">Preferences</a></nav><span class="header-meta">FIELD GUIDE / 2026</span></header><main id="main"><section class="page-head"><p class="eyebrow">WORKSPACE / 02</p><h1>A working surface<span>.</span></h1><p class="lead">An application shell made of ordinary web primitives.</p></section><div class="workspace"><aside class="sidebar"><p class="eyebrow">WORKSPACE</p><nav aria-label="Workspace navigation"><a href="#overview">Overview</a><a href="#activity">Activity</a><a href="../library/">Specimens</a><a href="../preferences/">Preferences</a></nav></aside><div><section id="overview"><div class="section-head"><h2>Overview</h2><span class="number">SAMPLE DATA / 2026</span></div><div class="grid three"><article class="card"><span class="number">SPECIMENS</span><strong class="metric">09</strong><p>In the library</p></article><article class="card"><span class="number">CATEGORIES</span><strong class="metric">04</strong><p>Areas to explore</p></article><article class="card"><span class="number">PROGRESS</span><strong class="metric">01 / 03</strong><p>First milestone</p><progress value="1" max="3">1 of 3</progress></article></div></section><section class="section" id="activity"><div class="section-head"><h2>Recent activity</h2><span class="number">LOCAL DEMO</span></div><div class="table-wrap"><table><caption>Sample project activity</caption><thead><tr><th scope="col">Specimen</th><th scope="col">Area</th><th scope="col">Status</th></tr></thead><tbody><tr><td>Container queries</td><td>Layout</td><td>Ready to explore</td></tr><tr><td>Dialog</td><td>HTML</td><td>Ready to explore</td></tr><tr><td>Canvas board</td><td>Canvas</td><td>Ready to explore</td></tr></tbody></table></div></section><aside class="note"><span class="number">FIELD NOTE / 01</span><h3>Small primitives, complete interfaces.</h3><p>This workspace uses sample data to demonstrate a real application layout.</p></aside></div></div></main><footer class="site-footer"><div><a class="brand" href="../"><span class="brand-mark">✳</span><span>WEB PLATFORM<br><b>BLUEPRINT</b></span></a><p>An exploration of the web, built with the web.</p></div><div><span class="number">EXPLORE</span><nav aria-label="Footer navigation"><a href="../">Home</a><a href="../library/">Library</a><a href="../workspace/">Workspace</a><a href="../components/">Components</a><a href="../playground/">Playground</a><a href="../preferences/">Preferences</a></nav></div><div><span class="number">PROJECT</span><p>Native first.<br>Built to be understood.</p><a href="https://github.com/josuecm13/web-platform-blueprint">View source ↗</a></div><div class="footer-bottom"><span>WEB PLATFORM BLUEPRINT / 2026</span><span>MADE OF HTML, CSS &amp; CURIOSITY</span></div></footer></body></html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="A native-first field guide to the web platform."><title>workspace — Web Platform Blueprint</title><link rel="stylesheet" href="../src/style.css"><link rel="stylesheet" href="../src/workspace.css"><script type="module" blocking="render" src="../src/main.ts"></script><script type="module" blocking="render" src="../src/workspace.ts"></script></head><body><a class="skip" href="#main">Skip to content</a><header class="site-header"><a class="brand" href="../"><span class="brand-mark">✳</span><span>WEB PLATFORM<br><b>BLUEPRINT</b></span></a><nav aria-label="Main navigation"><a href="../">Home</a><a href="../library/">Library</a><a href="../workspace/" aria-current="page">Workspace</a><a href="../components/">Components</a><a href="../playground/">Playground</a><a href="../preferences/">Preferences</a></nav><span class="header-meta">FIELD GUIDE / 2026</span></header><main id="main" class="workspace-page">
+  <section class="workspace-intro" aria-labelledby="workspace-title">
+    <h1 id="workspace-title">A working <em>surface.</em></h1>
+    <p>See how a dashboard handles more data, less space, and different display densities.</p>
+  </section>
+  <div class="workspace workspace-shell">
+    <aside class="workspace-sidebar">
+      <nav aria-label="Workspace navigation">
+        <a href="#overview">Overview</a>
+        <a href="#activity">Activity</a>
+        <a href="../library/">Specimens</a>
+        <a href="../preferences/">Display preferences</a>
+      </nav>
+    </aside>
+    <div class="workspace-content">
+      <section id="overview" class="workspace-panel" data-inspect-record="workspaceOverview" aria-labelledby="overview-heading">
+        <header class="workspace-panel-heading">
+          <h2 id="overview-heading">Overview</h2>
+          <div data-inspect-controls></div>
+        </header>
+        <div class="workspace-metrics" data-inspect-target data-measure-grid>
+          <div><p>Activity entries</p><strong data-workspace-metric="entries">3</strong></div>
+          <div><p>Areas represented</p><strong data-workspace-metric="areas">3</strong></div>
+          <div><p>Ready to explore</p><strong data-workspace-metric="ready">3</strong></div>
+        </div>
+      </section>
+      <section id="activity" class="workspace-panel" data-inspect-record="workspaceActivity" aria-labelledby="activity-heading">
+        <header class="workspace-panel-heading">
+          <h2 id="activity-heading">Activity</h2>
+          <div data-inspect-controls></div>
+        </header>
+        <form class="workspace-controls" id="workspace-controls" hidden>
+          <label>Dataset
+            <select name="dataset">
+              <option value="typical">Typical</option>
+              <option value="empty">Empty</option>
+              <option value="crowded">Crowded</option>
+            </select>
+          </label>
+          <label>Search activity
+            <input name="search" type="search" placeholder="Search name, area, or status">
+          </label>
+          <label>Sort by
+            <select name="sort">
+              <option value="recent">Most recent</option>
+              <option value="name">Specimen name</option>
+              <option value="area">Area</option>
+              <option value="status">Status</option>
+            </select>
+          </label>
+        </form>
+        <p class="workspace-results" id="workspace-results" role="status" hidden></p>
+        <div class="workspace-activity-preview" data-inspect-target>
+          <div class="workspace-table-region" role="region" aria-label="Activity table" tabindex="0">
+            <table>
+              <caption>Sample project activity</caption>
+              <thead>
+                <tr><th scope="col">Specimen</th><th scope="col">Area</th><th scope="col">Status</th><th scope="col" aria-sort="descending">Updated</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Container queries</td><td>Layout</td><td>Ready to explore</td><td><time datetime="2026-11-14">Nov 14, 2026</time></td></tr>
+                <tr><td>Dialog</td><td>HTML</td><td>Ready to explore</td><td><time datetime="2026-11-13">Nov 13, 2026</time></td></tr>
+                <tr><td>Canvas board</td><td>Canvas</td><td>Ready to explore</td><td><time datetime="2026-11-12">Nov 12, 2026</time></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="workspace-empty" id="workspace-empty" hidden>
+            <p></p>
+            <button type="button">Clear search</button>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</main><footer class="site-footer"><div><a class="brand" href="../"><span class="brand-mark">✳</span><span>WEB PLATFORM<br><b>BLUEPRINT</b></span></a><p>An exploration of the web, built with the web.</p></div><div><span class="number">EXPLORE</span><nav aria-label="Footer navigation"><a href="../">Home</a><a href="../library/">Library</a><a href="../workspace/">Workspace</a><a href="../components/">Components</a><a href="../playground/">Playground</a><a href="../preferences/">Preferences</a></nav></div><div><span class="number">PROJECT</span><p>Native first.<br>Built to be understood.</p><a href="https://github.com/josuecm13/web-platform-blueprint">View source ↗</a></div><div class="footer-bottom"><span>WEB PLATFORM BLUEPRINT / 2026</span><span>MADE OF HTML, CSS &amp; CURIOSITY</span></div></footer></body></html>

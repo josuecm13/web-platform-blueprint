@@ -15,9 +15,9 @@ const number = (value: string) => parseFloat(value) || 0;
 
 function gridTracks(resolvedValue: string) {
   // CSSOM serializes used grid tracks to individual pixel lengths, with
-  // optional bracketed line names.
+  // optional bracketed line names. Skip collapsed auto-fit tracks.
   return [...resolvedValue.replace(/\[[^\]]*\]/g, '').matchAll(/([\d.]+)px/g)]
-    .map(([, size]) => Number(size));
+    .map(([, size]) => Number(size)).filter(size => size > 0);
 }
 
 function trackCount(count: number, axis: 'row' | 'column') {

@@ -79,6 +79,8 @@ All pages include a chromatic aberration experiment using [HTML-in-Canvas](https
 
 This expands the Playground scope of [issue #5](https://github.com/josuecm13/web-platform-blueprint/issues/5) to the whole page at the project owner's request. It does not complete that issue's Reference Dock or browser verification requirements. See [implementation and validation notes](docs/html-in-canvas.md).
 
+Workspace offers **Empty**, **Typical**, and **Crowded** datasets. Search or sort the activity table, change the project density in Preferences, and use Inspect to see how the overview grid and scrollable table handle the available space.
+
 ## Run locally
 
 Requires Node.js. Run `npm install`, then `npm run dev` for development or `npm run build` followed by `npm run preview` for a production preview.

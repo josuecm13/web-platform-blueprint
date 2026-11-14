@@ -4,6 +4,7 @@ import homeSource from '../index.html?url&no-inline';
 import canvasSource from '../playground/index.html?url&no-inline';
 import layoutSource from './style.css?url&no-inline';
 import specimenStyles from './specimens.css?url&no-inline';
+import workspaceStyles from './workspace.css?url&no-inline';
 
 type Reference = { label: string; url: string };
 type Tier = 'Baseline' | 'Progressive enhancement';
@@ -74,6 +75,53 @@ export const records = {
     docs: [
       { label: 'CSS Grid layout', url: `${mdn}/Web/CSS/Guides/Grid_layout` },
       { label: 'Using media queries', url: `${mdn}/Web/CSS/Guides/Media_queries/Using` },
+    ],
+  },
+  workspaceOverview: {
+    name: 'Workspace overview grid',
+    element: '<div>',
+    tier: 'Baseline',
+    primitives: ['CSS Grid', 'auto-fit', 'minmax()', 'Custom properties'],
+    why: 'The overview uses the width of its own grid to line up summary cards. Dock reflow and density changes can happen without adding a separate layout for every width.',
+    fallback: 'The three metrics stay readable in document order when grid styling is unavailable.',
+    source: {
+      language: 'CSS',
+      code: `.workspace-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));
+  gap: .6rem;
+}`,
+      url: workspaceStyles,
+      filename: 'workspace.css',
+    },
+    docs: [
+      { label: 'CSS Grid layout', url: `${mdn}/Web/CSS/Guides/Grid_layout` },
+    ],
+  },
+  workspaceActivity: {
+    name: 'Workspace activity table',
+    element: '<table>',
+    tier: 'Baseline',
+    primitives: ['<caption>', '<th scope="col">', 'overflow: auto', 'position: sticky', 'aria-sort'],
+    why: 'One focusable scroll region keeps a wide table usable on narrow screens. Sticky column headers keep the meaning of each cell visible while browsing long datasets.',
+    fallback: 'If sticky positioning is unavailable, headers scroll with the table. Without JavaScript, the typical sample rows are still present in the HTML.',
+    source: {
+      language: 'CSS',
+      code: `.workspace-table-region {
+  max-block-size: min(28rem, 61vh);
+  overflow: auto;
+}
+
+.workspace-table-region th {
+  position: sticky;
+  inset-block-start: 0;
+}`,
+      url: workspaceStyles,
+      filename: 'workspace.css',
+    },
+    docs: [
+      { label: 'HTML table element', url: `${mdn}/Web/HTML/Reference/Elements/table` },
+      { label: 'CSS positioning', url: `${mdn}/Web/CSS/Reference/Properties/position` },
     ],
   },
   dialog: {
