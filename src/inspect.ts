@@ -1,6 +1,7 @@
 import './inspect.css';
 import { isRecordKey, records } from './inspect-records';
 import { layoutDetails, measuredLayouts } from './layout-measurements';
+import { isLiveSpecimenId, liveSpecimens } from './specimen-registry';
 
 const modes = ['render', 'wireframe', 'inspect'] as const;
 type Mode = typeof modes[number];
@@ -45,6 +46,11 @@ dockContent.innerHTML = `
       </div>
       <h3 class="dock-title" tabindex="-1"></h3>
       <p class="dock-why"></p>
+      <div class="dock-share" hidden>
+        <button type="button" class="dock-share-button">Copy link</button>
+        <input type="url" readonly hidden aria-label="Specimen link">
+        <p role="status"></p>
+      </div>
     </div>
     <section class="dock-section dock-layout" hidden>
       <h4>Live layout</h4>
@@ -89,9 +95,15 @@ const links = dockContent.querySelector<HTMLUListElement>('.dock-links')!;
 const sourceLink = dockContent.querySelector<HTMLAnchorElement>('.dock-source-link')!;
 const layoutSection = dockContent.querySelector<HTMLElement>('.dock-layout')!;
 const layoutList = layoutSection.querySelector('dl')!;
+const share = dockContent.querySelector<HTMLElement>('.dock-share')!;
+const copyLink = share.querySelector('button')!;
+const shareUrl = share.querySelector('input')!;
+const shareStatus = share.querySelector('[role="status"]')!;
 
-const specimens = [...document.querySelectorAll<HTMLElement>('[data-inspect-record]')].flatMap(specimen => {
-  const key = specimen.dataset.inspectRecord!;
+const specimens = [...document.querySelectorAll<HTMLElement>('[data-inspect-record], [data-specimen-id]')].flatMap(specimen => {
+  const id = specimen.hasAttribute('data-specimen-id') && isLiveSpecimenId(specimen.id)
+    ? specimen.id : undefined;
+  const key = id ? liveSpecimens[id].record : specimen.dataset.inspectRecord ?? '';
   const controls = specimen.querySelector<HTMLElement>('[data-inspect-controls]');
   const target = specimen.querySelector<HTMLElement>('[data-inspect-target]');
   if (!isRecordKey(key) || !controls || !target) return [];
@@ -108,7 +120,7 @@ const specimens = [...document.querySelectorAll<HTMLElement>('[data-inspect-reco
   hint.textContent = records[key].element;
   controls.append(trigger, hint);
 
-  return [{ record: records[key], target, trigger }];
+  return [{ id, section: specimen, record: records[key], target, trigger }];
 });
 
 type Specimen = typeof specimens[number];
@@ -117,6 +129,7 @@ let selected: Specimen | undefined;
 let invoker: HTMLElement | undefined;
 let presentation: Presentation | undefined;
 let unsubscribeLayout: (() => void) | undefined;
+let openedFromFragment = false;
 
 const root = document.documentElement;
 let current: Mode = 'render';
@@ -183,6 +196,7 @@ function dismissReference(restoreFocus = true) {
   hideDock();
   clearSelection();
   selected = undefined;
+  openedFromFragment = false;
   if (restoreFocus && invoker?.isConnected) invoker.focus();
   invoker = undefined;
 }
@@ -193,6 +207,9 @@ function renderReference(specimen: Specimen) {
   specimen.target.classList.add('inspect-selected');
   specimen.trigger.setAttribute('aria-expanded', 'true');
   const record = specimen.record;
+  share.hidden = !specimen.id;
+  shareUrl.hidden = true;
+  shareStatus.textContent = '';
   const layout = measuredLayouts.get(specimen.target);
   layoutSection.hidden = !layout;
   if (layout) {
@@ -248,7 +265,8 @@ function renderReference(specimen: Specimen) {
   body.scrollTop = 0;
 }
 
-function openReference(specimen: Specimen, trigger: HTMLElement) {
+function openReference(specimen: Specimen, trigger: HTMLElement, fromFragment = false) {
+  openedFromFragment = fromFragment;
   invoker = trigger;
   renderReference(specimen);
   if (!presentation) showDock();
@@ -264,7 +282,7 @@ if (start && specimens.length) {
   start.addEventListener('click', () => {
     setMode('inspect');
     openReference(specimens[0], start);
-    specimens[0].target.closest('[data-inspect-record]')?.scrollIntoView({ block: 'start', behavior: 'instant' });
+    specimens[0].section.scrollIntoView({ block: 'start', behavior: 'instant' });
   });
 }
 
@@ -284,10 +302,29 @@ paging.querySelectorAll<HTMLButtonElement>('[data-step]').forEach(button => {
     const next = specimens[(index + specimens.length) % specimens.length];
     renderReference(next);
     if (!mobile.matches) {
-      next.target.closest('[data-inspect-record]')?.scrollIntoView({ block: 'nearest' });
+      next.section.scrollIntoView({ block: 'nearest' });
     }
     title.focus({ preventScroll: true });
   });
+});
+
+copyLink.addEventListener('click', async () => {
+  const specimen = selected;
+  if (!specimen?.id) return;
+  const url = new URL(location.href);
+  url.hash = specimen.id;
+
+  try {
+    await navigator.clipboard.writeText(url.href);
+    if (selected === specimen) shareStatus.textContent = 'Link copied.';
+  } catch {
+    if (selected !== specimen) return;
+    shareUrl.value = url.href;
+    shareUrl.hidden = false;
+    shareUrl.focus();
+    shareUrl.select();
+    shareStatus.textContent = 'Copy the selected link.';
+  }
 });
 
 close.addEventListener('click', () => dismissReference());
@@ -318,3 +355,19 @@ try {
   if (modes.some(mode => mode === saved)) current = saved as Mode;
 } catch { /* Start in Render when storage is unavailable. */ }
 setMode(current);
+
+function openLinkedSpecimen() {
+  const fragment = location.hash.slice(1);
+  const specimen = fragment && specimens.find(entry => entry.id === fragment);
+  if (!specimen) {
+    if (openedFromFragment) dismissReference(false);
+    return;
+  }
+
+  setMode('inspect');
+  openReference(specimen, specimen.trigger, true);
+  specimen.section.scrollIntoView({ block: 'start', behavior: 'instant' });
+}
+
+window.addEventListener('hashchange', openLinkedSpecimen);
+openLinkedSpecimen();
