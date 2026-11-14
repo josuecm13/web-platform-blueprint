@@ -1,0 +1,4 @@
+interface:
+  display_name: "Native Web Specimen Development"
+  short_description: "Build inspectable, native-first web specimens"
+  default_prompt: "Use $native-web-specimen-development to implement a Web Platform Blueprint specimen with its fallback and Reference Dock record."
