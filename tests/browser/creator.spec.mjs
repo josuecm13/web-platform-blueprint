@@ -13,6 +13,7 @@ const storageKey = 'blueprint-creator-v1';
 async function openStudio(page) {
   await page.goto('/create/');
   await expect(preview(page).getByRole('heading', { name: 'Make space for better design.' })).toBeVisible();
+  await expect.poll(() => preview(page).locator('.page-hero img').evaluate(img => img.naturalWidth)).toBeGreaterThan(0);
 }
 
 async function createPage(page, { name, goal, action = 'Learn more', href = '#toolkit' }) {

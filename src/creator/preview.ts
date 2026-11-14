@@ -200,7 +200,7 @@ export function createPreview(frame: HTMLIFrameElement, handlers: {
   }
 
   frame.addEventListener('load', rootInit);
-  frame.srcdoc = previewDocument(pageFonts);
+  frame.srcdoc = previewDocument(pageFonts, [artwork, serif, sans].map(absolute));
   if (typeof ResizeObserver === 'function') {
     new ResizeObserver(entries => {
       const width = Math.round(entries[0].contentRect.width);

@@ -16,10 +16,11 @@ function pageHead() {
   return '<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">';
 }
 
-export function previewDocument(fonts: string) {
+export function previewDocument(fonts: string, assetUrls: string[]) {
+  const policy = `default-src 'none'; style-src 'unsafe-inline'; img-src ${assetUrls[0]}; font-src ${assetUrls.slice(1).join(' ')}`;
   return `<!doctype html><html lang="en" data-studio-preview>
 <head>${pageHead()}
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:">
+<meta http-equiv="Content-Security-Policy" content="${escapeHtml(policy)}">
 <title>Page preview</title><style>${fonts}\n${styles}</style></head><body></body></html>`;
 }
 
