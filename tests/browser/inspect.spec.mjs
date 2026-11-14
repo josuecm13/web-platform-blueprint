@@ -52,7 +52,7 @@ test('desktop keeps the live card visible and supports keyboard selection, refer
   await page.getByRole('button', { name: 'Wireframe' }).click();
   await expect(dock).toBeHidden();
   await expect(motion).toBeHidden();
-  await page.getByRole('link', { name: 'Workspace', exact: true }).first().click();
+  await page.getByRole('link', { name: 'Preferences', exact: true }).first().click();
   await expect(page.getByRole('button', { name: 'Wireframe' })).toHaveAttribute('aria-pressed', 'true');
   await page.getByRole('button', { name: 'Inspect', exact: true }).click();
   await page.getByRole('link', { name: 'Open specimens' }).click();
