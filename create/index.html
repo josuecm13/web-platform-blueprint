@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Build an inspectable page from Blueprint's native web patterns, then carry its UX philosophy into the next page.">
+  <title>Creator Studio — Web Platform Blueprint</title>
+  <link rel="stylesheet" href="../src/style.css">
+  <link rel="stylesheet" href="../src/creator/studio.css">
+  <script type="module" blocking="render" src="../src/creator/studio.ts"></script>
+</head>
+<body class="creator-page">
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="site-header creator-site-header">
+    <a class="brand" href="../"><span class="brand-mark" aria-hidden="true">✳&#xfe0e;</span><span>WEB PLATFORM<br><b>BLUEPRINT</b></span></a>
+    <nav aria-label="Main navigation">
+      <a href="../">Home</a>
+      <a href="../library/">Library</a>
+      <a href="../workspace/">Workspace</a>
+      <a href="../components/">Components</a>
+      <a href="../playground/">Playground</a>
+      <a href="../preferences/">Preferences</a>
+      <a href="./" aria-current="page">Create</a>
+    </nav>
+  </header>
+  <main class="creator-shell" id="main">
+    <header class="creator-intro">
+      <div>
+        <h1>Creator Studio</h1>
+        <p>Build an inspectable web page. Carry its UX philosophy into the next one.</p>
+      </div>
+      <button type="button" class="studio-button primary" data-action="new-page" data-icon="plus" data-studio-required hidden>New page</button>
+    </header>
+
+    <noscript>
+      <section class="creator-noscript">
+        <h2>Build with Blueprint patterns</h2>
+        <p>The editor needs JavaScript. Explore the <a href="../library/">reference library</a> or open the <a data-specimen-link="native-disclosure">native disclosure specimen</a> to see the HTML patterns the editor uses.</p>
+      </section>
+    </noscript>
+
+    <div class="studio" id="studio" hidden>
+      <div class="studio-bar">
+        <button type="button" class="studio-project" data-action="project" aria-haspopup="dialog" data-icon="page">
+          <span><small>Current page</small><strong id="current-page"></strong></span><i data-icon="chevrons" aria-hidden="true"></i>
+        </button>
+        <div class="studio-workspaces" role="tablist" aria-label="Creator workspace">
+          <button type="button" id="tab-compose" role="tab" aria-selected="true" aria-controls="compose" data-workspace="compose" data-icon="layout">Compose</button>
+          <button type="button" id="tab-workflow" role="tab" aria-selected="false" aria-controls="workflow" tabindex="-1" data-workspace="workflow" data-icon="branch">Workflow</button>
+        </div>
+        <div class="studio-bar-actions">
+          <div class="studio-history" role="group" aria-label="Edit history">
+            <button type="button" class="studio-icon-button" data-action="undo" data-icon="undo" aria-label="Undo" title="Undo" disabled></button>
+            <button type="button" class="studio-icon-button" data-action="redo" data-icon="redo" aria-label="Redo" title="Redo" disabled></button>
+          </div>
+          <button type="button" class="studio-button" data-action="export" data-icon="download" aria-haspopup="dialog">Export</button>
+        </div>
+      </div>
+
+      <div class="studio-compose" id="compose" role="tabpanel" aria-labelledby="tab-compose">
+        <nav class="studio-jump" aria-label="Compose panels"><a href="#studio-preview">Preview</a><a href="#studio-outline">Outline</a><a href="#studio-properties">Properties</a></nav>
+
+        <aside class="studio-outline" id="studio-outline" aria-labelledby="outline-title">
+          <header class="studio-panel-head">
+            <h2 id="outline-title" data-icon="layers">Outline</h2>
+            <span class="studio-count" id="section-count"></span>
+          </header>
+          <div class="outline-body">
+            <ol id="outline-list" class="studio-outline-list" aria-label="Page sections"></ol>
+            <button type="button" class="studio-button studio-add-section" data-action="add-section" data-icon="plus" aria-haspopup="dialog">Add section</button>
+          </div>
+          <div class="outline-foot">
+            <button type="button" class="studio-button studio-page-settings" data-action="page-settings" data-icon="settings" aria-haspopup="dialog">Page settings</button>
+          </div>
+        </aside>
+
+        <section id="studio-preview" class="studio-preview" aria-labelledby="preview-title">
+          <header class="studio-panel-head studio-preview-head">
+            <h2 id="preview-title"><span class="studio-live-dot" aria-hidden="true"></span>Live preview</h2>
+            <div class="studio-preview-actions">
+              <div data-display-modes></div>
+              <div class="studio-segments studio-devices" role="group" aria-label="Preview width">
+                <button type="button" class="studio-icon-button" aria-pressed="true" data-width="fit" data-icon="desktop" aria-label="Fit preview" title="Fit preview"></button>
+                <button type="button" class="studio-icon-button" aria-pressed="false" data-width="phone" data-icon="phone" aria-label="Phone preview" title="Phone preview (390 px)"></button>
+              </div>
+            </div>
+          </header>
+          <div class="studio-stage" id="stage" data-width="fit">
+            <div class="studio-device">
+              <div class="studio-device-bar">
+                <span class="studio-device-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+                <span id="preview-name"></span>
+                <span id="viewport-width"></span>
+              </div>
+              <iframe id="page-preview" title="Live page preview" sandbox="allow-same-origin" referrerpolicy="no-referrer"></iframe>
+            </div>
+          </div>
+          <div class="studio-preview-foot">
+            <p id="preview-hint">Try links and disclosures in the preview.</p>
+            <button type="button" class="studio-button" data-action="edit-canvas" data-icon="edit" aria-pressed="false">Edit on canvas</button>
+          </div>
+        </section>
+
+        <aside class="studio-properties" id="studio-properties" aria-labelledby="properties-title">
+          <header class="studio-panel-head">
+            <h2 id="properties-title" data-icon="sliders">Properties</h2>
+            <button type="button" class="studio-icon-button" data-action="inspect-section" data-icon="inspect" aria-label="Inspect selected section" title="Inspect selected section"></button>
+          </header>
+          <div id="section-properties" class="properties-body"></div>
+        </aside>
+      </div>
+
+      <div class="studio-workflow" id="workflow" role="tabpanel" aria-labelledby="tab-workflow" hidden>
+        <header class="workflow-intro">
+          <div>
+            <h2>Build the next page</h2>
+            <p>Capture what makes this experience work, then decide what the visitor needs next.</p>
+            <button type="button" class="studio-button workflow-example" data-action="sample-handoff" data-icon="branch" hidden>Try a sample handoff</button>
+            <nav class="workflow-links" aria-label="Workflow panels"><a href="#next-page-title">Next page</a><a href="#prompt-title">Build prompt</a></nav>
+          </div>
+          <div class="workflow-journey" aria-label="Page relationship">
+            <div><small>Source page</small><strong id="journey-source"></strong><span id="journey-source-action"></span></div>
+            <span class="journey-arrow" data-icon="arrow" aria-hidden="true"></span>
+            <div><small id="journey-relation"></small><strong id="journey-target"></strong><span id="journey-target-action"></span></div>
+          </div>
+        </header>
+
+        <div class="workflow-grid">
+          <section class="workflow-panel" aria-labelledby="philosophy-title">
+            <header class="studio-panel-head"><h3 id="philosophy-title" data-icon="compass">Build philosophy</h3></header>
+            <div class="workflow-body" id="philosophy-editor"></div>
+          </section>
+
+          <section class="workflow-panel" aria-labelledby="next-page-title">
+            <header class="studio-panel-head"><h3 id="next-page-title" data-icon="branch">Next page</h3></header>
+            <form id="handoff-form" class="workflow-body">
+              <fieldset class="workflow-relations">
+                <legend>Relationship to the source</legend>
+                <label><input type="radio" name="relation" value="sibling" checked><span><strong>Same philosophy</strong><small>Apply the same conventions to a sibling page.</small></span></label>
+                <label><input type="radio" name="relation" value="complement"><span><strong>Complementary page</strong><small>Continue the same visitor journey.</small></span></label>
+              </fieldset>
+              <div id="handoff-fields" class="studio-form"></div>
+              <label class="studio-field" for="handoff-context">
+                <span id="handoff-context-label">Connection to the source</span>
+                <textarea name="context" id="handoff-context" rows="3" maxlength="1400"></textarea>
+              </label>
+              <label class="studio-check" id="link-handoff" hidden><input type="checkbox" name="link-source" checked> Link the source page’s primary action to this draft</label>
+          <button class="studio-button primary" type="submit" data-icon="arrow">Create related draft</button>
+            </form>
+          </section>
+
+          <section class="workflow-panel workflow-output" aria-labelledby="prompt-title">
+            <header class="studio-panel-head"><h3 id="prompt-title" data-icon="code">Build prompt</h3><span class="workflow-format">.md</span></header>
+            <div class="workflow-body">
+              <p>Use this prompt with a collaborator or your preferred AI builder.</p>
+              <label class="studio-visually-hidden" for="build-prompt">Generated build prompt</label>
+              <textarea id="build-prompt" spellcheck="false" readonly></textarea>
+              <div class="workflow-output-actions">
+                <button type="button" class="studio-button primary" data-action="copy-prompt" data-icon="copy">Copy prompt</button>
+                <button type="button" class="studio-icon-button" data-action="download-prompt" data-icon="download" aria-label="Download Markdown prompt" title="Download Markdown prompt"></button>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <div class="studio-status">
+        <span class="studio-save" id="save-status"></span>
+        <span id="studio-feedback" role="status"></span>
+        <button type="button" id="page-origin" data-action="open-page" hidden></button>
+      </div>
+    </div>
+
+    <dialog class="studio-dialog" id="project-dialog" aria-labelledby="project-title">
+      <header class="studio-dialog-head">
+        <h2 id="project-title">Project pages</h2>
+        <form method="dialog"><button class="studio-icon-button" data-icon="close" aria-label="Close project pages"></button></form>
+      </header>
+      <div class="studio-dialog-body">
+        <ul id="project-pages" class="studio-project-list"></ul>
+      </div>
+      <footer class="studio-dialog-foot studio-project-actions">
+        <button type="button" class="studio-button" data-action="import" data-icon="upload">Import backup</button>
+        <button type="button" class="studio-button primary" data-action="new-page" data-icon="plus">New page</button>
+        <input type="file" id="project-import" accept=".json,application/json" hidden>
+        <p id="import-status" role="status"></p>
+      </footer>
+    </dialog>
+
+    <dialog class="studio-dialog" id="brief-dialog" aria-labelledby="brief-title">
+      <header class="studio-dialog-head">
+        <h2 id="brief-title">New page</h2>
+        <form method="dialog"><button class="studio-icon-button" data-icon="close" aria-label="Close page settings"></button></form>
+      </header>
+      <form id="brief-form">
+        <div class="studio-dialog-body studio-form">
+          <div id="brief-fields" class="studio-form"></div>
+          <div class="studio-appearance" id="page-appearance">
+            <fieldset class="studio-palettes">
+              <legend>Page palette</legend>
+              <div id="page-palettes"></div>
+            </fieldset>
+            <div id="page-artwork"></div>
+          </div>
+        </div>
+        <footer class="studio-dialog-foot">
+          <button type="button" class="studio-button" data-action="blank-page">Start with an empty page</button>
+          <button type="submit" class="studio-button primary" id="brief-submit" data-icon="arrow">Build draft</button>
+        </footer>
+      </form>
+    </dialog>
+
+    <dialog class="studio-dialog" id="section-dialog" aria-labelledby="section-dialog-title">
+      <header class="studio-dialog-head">
+        <h2 id="section-dialog-title">Add a section</h2>
+        <form method="dialog"><button class="studio-icon-button" data-icon="close" aria-label="Close section catalog"></button></form>
+      </header>
+      <div class="studio-dialog-body studio-catalog" id="section-catalog"></div>
+    </dialog>
+
+    <dialog class="studio-dialog" id="export-dialog" aria-labelledby="export-title">
+      <header class="studio-dialog-head">
+        <h2 id="export-title">Export your work</h2>
+        <form method="dialog"><button class="studio-icon-button" data-icon="close" aria-label="Close export"></button></form>
+      </header>
+      <div class="studio-dialog-body">
+        <div id="export-review" class="studio-review"></div>
+        <div class="studio-export-actions">
+          <button type="button" class="studio-button primary" data-action="download-html" data-icon="download">Download HTML</button>
+          <button type="button" class="studio-button" data-action="download-site" data-icon="layers">Download linked site</button>
+          <button type="button" class="studio-button" data-action="download-backup" data-icon="file">Project backup</button>
+        </div>
+        <p id="export-status" role="status"></p>
+      </div>
+    </dialog>
+
+    <dialog class="studio-dialog studio-small-dialog" id="import-dialog" aria-labelledby="import-title">
+      <header class="studio-dialog-head"><h2 id="import-title">Replace the current project?</h2></header>
+      <div class="studio-dialog-body">
+        <p>Your backup contains <strong id="import-count"></strong>. Download the current project before replacing it if you want to keep both.</p>
+        <button type="button" class="studio-button" data-action="download-backup" data-icon="download">Download current project</button>
+      </div>
+      <form method="dialog" class="studio-dialog-foot">
+        <button class="studio-button" value="cancel" autofocus>Cancel</button>
+        <button class="studio-button primary" value="replace">Restore backup</button>
+      </form>
+    </dialog>
+  </main>
+</body>
+</html>

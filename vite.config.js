@@ -36,5 +36,6 @@ export default defineConfig({
     components: resolve('components/index.html'),
     playground: resolve('playground/index.html'),
     preferences: resolve('preferences/index.html'),
+    create: resolve('create/index.html'),
   } } },
 });

@@ -6,6 +6,9 @@ import layoutSource from './style.css?url&no-inline';
 import specimenStyles from './specimens.css?url&no-inline';
 import workspaceStyles from './workspace.css?url&no-inline';
 
+import creatorStyles from './creator/page.css?url&no-inline';
+import creatorRenderer from './creator/render-page.ts?url&no-inline';
+
 type Reference = { label: string; url: string };
 type Tier = 'Baseline' | 'Progressive enhancement';
 
@@ -23,6 +26,91 @@ type RecordEntry = {
 const mdn = 'https://developer.mozilla.org/en-US/docs';
 
 export const records = {
+  creatorHero: {
+    name: 'Responsive hero',
+    element: '<section>',
+    tier: 'Progressive enhancement',
+    primitives: ['<h1>', 'CSS Grid', '@media', ':has()'],
+    why: 'Lead with the value proposition and let the artwork sit alongside it when the page has enough space.',
+    fallback: 'Without the matching layout rules, the copy and artwork stack in document order.',
+    source: {
+      language: 'CSS',
+      code: `@media (min-width: 36rem) {
+  .page-hero .page-inner:has(.page-art) {
+    grid-template-columns: minmax(0, 1.02fr) minmax(0, 1fr);
+  }
+}`,
+      url: creatorStyles,
+      filename: 'page.css',
+    },
+    docs: [
+      { label: 'CSS Grid layout', url: `${mdn}/Web/CSS/Guides/Grid_layout` },
+      { label: ':has()', url: `${mdn}/Web/CSS/Reference/Selectors/:has` },
+    ],
+  },
+  creatorGrid: {
+    name: 'Responsive benefits grid',
+    element: '<ul>',
+    tier: 'Baseline',
+    primitives: ['<ul>', 'CSS Grid', 'auto-fit', 'minmax()'],
+    why: 'Present comparable points as a list and let columns reflow to fit the space available.',
+    fallback: 'The benefits read in list order when grid styles are unavailable.',
+    source: {
+      language: 'CSS',
+      code: `.page-benefits .page-entries {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));
+}`,
+      url: creatorStyles,
+      filename: 'page.css',
+    },
+    docs: [{ label: 'CSS Grid layout', url: `${mdn}/Web/CSS/Guides/Grid_layout` }],
+  },
+  creatorAction: {
+    name: 'Primary action',
+    element: '<a>',
+    tier: 'Baseline',
+    primitives: ['<a href>', 'fragment navigation', ':focus-visible'],
+    why: 'A link gives the visitor a next step using ordinary browser navigation.',
+    fallback: 'The link works with CSS and JavaScript disabled. If the draft lacks a destination, export omits the incomplete action.',
+    source: {
+      language: 'HTML',
+      code: '<a class="page-action" href="#steps">See the steps</a>',
+      url: creatorRenderer,
+      filename: 'render-page.ts',
+    },
+    docs: [{ label: 'HTML anchor element', url: `${mdn}/Web/HTML/Reference/Elements/a` }],
+  },
+  creatorText: {
+    name: 'Editorial text',
+    element: '<section>',
+    tier: 'Baseline',
+    primitives: ['<section>', 'aria-labelledby', 'max-inline-size'],
+    why: 'A named section gives the explanation a place in the page outline. The line length is bounded for reading.',
+    fallback: 'Without CSS, the heading and paragraph remain in document order.',
+    source: {
+      language: 'HTML',
+      code: '<section aria-labelledby="text-heading">\n  <h2 id="text-heading">About this idea</h2>\n  <p>Give readers the context they need.</p>\n</section>',
+      url: creatorRenderer,
+      filename: 'render-page.ts',
+    },
+    docs: [{ label: 'HTML section element', url: `${mdn}/Web/HTML/Reference/Elements/section` }],
+  },
+  creatorSteps: {
+    name: 'Ordered steps',
+    element: '<ol>',
+    tier: 'Baseline',
+    primitives: ['<ol>', '<li>', 'CSS Grid'],
+    why: 'List order is part of the content, so each step is announced and read in the sequence the visitor needs.',
+    fallback: 'Without CSS, a numbered list still conveys the order.',
+    source: {
+      language: 'HTML',
+      code: '<ol class="page-entries">\n  <li><h3>Prepare</h3><p>Collect what you need.</p></li>\n  <li><h3>Begin</h3><p>Take the first step.</p></li>\n</ol>',
+      url: creatorRenderer,
+      filename: 'render-page.ts',
+    },
+    docs: [{ label: 'HTML ordered list', url: `${mdn}/Web/HTML/Reference/Elements/ol` }],
+  },
+
   card: {
     name: 'Responsive card',
     element: '<article>',

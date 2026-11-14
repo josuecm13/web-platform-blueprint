@@ -15,3 +15,8 @@
  @media(max-width:850px){.site-header{flex-wrap:wrap}.header-meta{display:none}.site-header nav{width:100%;overflow:auto;flex-wrap:nowrap;padding-bottom:.3rem}.site-header nav a{white-space:nowrap}.hero{grid-template-columns:1fr;min-height:0}.hero-art{max-width:560px}.three{grid-template-columns:repeat(2,minmax(0,1fr))}.workspace{grid-template-columns:1fr}.sidebar nav{display:flex;flex-wrap:wrap}.section-head{align-items:start;flex-direction:column}}
  @media(max-width:560px){.three,.two{grid-template-columns:1fr}.carousel{grid-auto-columns:85%}.site-footer{grid-template-columns:1fr 1fr}.site-footer>div:first-child{grid-column:1/-1}.footer-bottom{gap:1rem;flex-direction:column}.actions{align-items:start;flex-direction:column}.hero h1{font-size:3.3rem}}
 }
+
+@layer components {
+ .library-specimen-actions { display: flex; align-items: baseline; flex-wrap: wrap; gap: .45rem .8rem; margin-block-start: auto; }
+ .library-specimen-actions a[href*="create/"] { color: #24564b; font-weight: 650; }
+}
