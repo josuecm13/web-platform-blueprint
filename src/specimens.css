@@ -152,7 +152,7 @@
   }
 
   @container (min-width: 550px) {
-    .lab-adaptive { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    #responsive-card:not([data-fallback-active]) .lab-adaptive { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
 
   .lab-card-art {
@@ -210,17 +210,19 @@
   .lab-motion-toggle { grid-row: 2; margin: 0; accent-color: #236e60; }
   .lab-motion-stage label { grid-row: 2; display: inline-grid; align-content: center; min-block-size: 2.75rem; font-size: .84rem; font-weight: 680; cursor: pointer; }
   .lab-motion-art { position: relative; grid-area: 1 / 1 / 2 / -1; inline-size: 8rem; block-size: 5rem; }
-  .lab-motion-art i { --shift: -.85rem; position: absolute; inset: .3rem 1.3rem 1.3rem .85rem; border: 1px solid #78a897; border-radius: .4rem; background: #cfe5d9; transition: translate .34s ease, background-color .24s ease; }
+  .lab-motion-art i { --shift: -.85rem; position: absolute; inset: .3rem 1.3rem 1.3rem .85rem; border: 1px solid #78a897; border-radius: .4rem; background: #cfe5d9; }
   .lab-motion-art i:nth-child(2) { --shift: 0rem; inset: .75rem .9rem .85rem 1.25rem; background: #9fd0bf; }
   .lab-motion-art i:nth-child(3) { --shift: .85rem; inset: 1.2rem .5rem .4rem 1.65rem; background: #417f71; }
-  .lab-motion-toggle:checked ~ .lab-motion-art i { translate: var(--shift) 0; }
   .lab-motion-toggle:checked ~ .lab-motion-art i:last-child { background: #205e50; }
 
-  @media (prefers-reduced-motion: reduce) {
-    .lab-motion-toggle:checked ~ .lab-motion-art i { translate: none; transition: none; }
+  @supports (translate: 1px 0) and (transition: translate 1s) {
+    @media (prefers-reduced-motion: no-preference) {
+      html:not([data-motion="reduce"]) #layer-shift:not([data-fallback-active]) {
+        .lab-motion-art i { transition: translate .34s ease, background-color .24s ease; }
+        .lab-motion-toggle:checked ~ .lab-motion-art i { translate: var(--shift) 0; }
+      }
+    }
   }
-
-  html[data-motion="reduce"] .lab-motion-toggle:checked ~ .lab-motion-art i { translate: none; transition: none; }
 
   .lab-reading { display: flex; flex-wrap: wrap; gap: .65rem 1.4rem; margin-block: 1.2rem 0; color: #326254; font-size: .8rem; }
 
