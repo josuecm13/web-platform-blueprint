@@ -1,5 +1,6 @@
 import './inspect.css';
 import { isRecordKey, records } from './inspect-records';
+import { layoutDetails, measuredLayouts } from './layout-measurements';
 
 const modes = ['render', 'wireframe', 'inspect'] as const;
 type Mode = typeof modes[number];
@@ -45,6 +46,10 @@ dockContent.innerHTML = `
       <h3 class="dock-title" tabindex="-1"></h3>
       <p class="dock-why"></p>
     </div>
+    <section class="dock-section dock-layout" hidden>
+      <h4>Live layout</h4>
+      <dl></dl>
+    </section>
     <section class="dock-section">
       <h4>Native primitives</h4>
       <ul class="dock-primitives"></ul>
@@ -82,6 +87,8 @@ const tier = dockContent.querySelector<HTMLElement>('.dock-tier')!;
 const primitives = dockContent.querySelector<HTMLUListElement>('.dock-primitives')!;
 const links = dockContent.querySelector<HTMLUListElement>('.dock-links')!;
 const sourceLink = dockContent.querySelector<HTMLAnchorElement>('.dock-source-link')!;
+const layoutSection = dockContent.querySelector<HTMLElement>('.dock-layout')!;
+const layoutList = layoutSection.querySelector('dl')!;
 
 const specimens = [...document.querySelectorAll<HTMLElement>('[data-inspect-record]')].flatMap(specimen => {
   const key = specimen.dataset.inspectRecord!;
@@ -109,6 +116,7 @@ type Presentation = 'sheet' | 'popover' | 'fixed';
 let selected: Specimen | undefined;
 let invoker: HTMLElement | undefined;
 let presentation: Presentation | undefined;
+let unsubscribeLayout: (() => void) | undefined;
 
 const root = document.documentElement;
 let current: Mode = 'render';
@@ -164,6 +172,8 @@ function hideDock() {
 }
 
 function clearSelection() {
+  unsubscribeLayout?.();
+  unsubscribeLayout = undefined;
   selected?.trigger.setAttribute('aria-expanded', 'false');
   selected?.target.classList.remove('inspect-selected');
 }
@@ -183,6 +193,26 @@ function renderReference(specimen: Specimen) {
   specimen.target.classList.add('inspect-selected');
   specimen.trigger.setAttribute('aria-expanded', 'true');
   const record = specimen.record;
+  const layout = measuredLayouts.get(specimen.target);
+  layoutSection.hidden = !layout;
+  if (layout) {
+    unsubscribeLayout = layout.subscribe(snapshot => {
+      const fields = layoutDetails(snapshot);
+      for (const [index, [label, value]] of fields.entries()) {
+        let row = layoutList.children[index];
+        if (!row) {
+          row = document.createElement('div');
+          row.append(document.createElement('dt'), document.createElement('dd'));
+          layoutList.append(row);
+        }
+        const name = row.firstElementChild!;
+        const reading = row.lastElementChild!;
+        if (name.textContent !== label) name.textContent = label;
+        if (reading.textContent !== value) reading.textContent = value;
+      }
+      while (layoutList.children.length > fields.length) layoutList.lastElementChild!.remove();
+    });
+  }
 
   title.textContent = record.name;
   dockContent.querySelector('.dock-element')!.textContent = record.element;

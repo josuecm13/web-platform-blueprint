@@ -48,6 +48,32 @@ export const records = {
       { label: 'CSS Grid layout', url: `${mdn}/Web/CSS/Guides/Grid_layout` },
     ],
   },
+  libraryGrid: {
+    name: 'Library grid',
+    element: '<div>',
+    tier: 'Baseline',
+    primitives: ['CSS Grid', 'repeat()', 'minmax()', '@media'],
+    why: 'The Library fits more specimens across a wide viewport. Matching cards reflow into the same tracks when the search or category changes.',
+    fallback: 'The cards follow the same document order and remain readable without the multi-column grid.',
+    source: {
+      language: 'CSS',
+      code: `.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+@media (max-width: 850px) {
+  .three { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 560px) {
+  .three { grid-template-columns: 1fr; }
+}`,
+      url: layoutSource,
+      filename: 'style.css',
+    },
+    docs: [
+      { label: 'CSS Grid layout', url: `${mdn}/Web/CSS/Guides/Grid_layout` },
+      { label: 'Using media queries', url: `${mdn}/Web/CSS/Guides/Media_queries/Using` },
+    ],
+  },
   dialog: {
     name: 'Native dialog',
     element: '<dialog>',

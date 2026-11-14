@@ -1,0 +1,114 @@
+@layer measurements {
+  [data-measure-grid] {
+    position: relative;
+  }
+
+  .measurement-overlay {
+    display: none;
+    position: absolute;
+    z-index: 1;
+    inset: 0;
+    pointer-events: none;
+    user-select: none;
+    border-radius: inherit;
+  }
+
+  html[data-inspect-mode="wireframe"] .measurement-overlay:not([hidden]),
+  html[data-inspect-mode="inspect"] .inspect-selected > .measurement-overlay:not([hidden]) {
+    display: block;
+    outline: 1px solid #167864;
+  }
+
+  html[data-inspect-mode="wireframe"] [data-layout-breakpoint],
+  html[data-inspect-mode="inspect"] [data-layout-breakpoint]:has(.inspect-selected) {
+    outline: 1px dashed #167864;
+    outline-offset: 3px;
+  }
+
+  .measurement-tracks {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    overflow: hidden;
+    border-radius: inherit;
+  }
+
+  .measurement-columns > span {
+    border-inline: 1px solid #168873b3;
+    background: #3ba28f12;
+  }
+
+  .measurement-columns > span:nth-child(2n) {
+    background: #3ba28f25;
+  }
+
+  .measurement-rows > span {
+    border-block-end: 1px dashed #168873b3;
+  }
+
+  .measurement-label {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-end: 0;
+    max-inline-size: 100%;
+    padding: .28rem .45rem;
+    border-radius: 0 .3rem 0 .3rem;
+    background: #173b34;
+    color: #dbfff2;
+    font: .65rem/1.3 ui-monospace, monospace;
+  }
+
+  .library-grid-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-block-end: 1rem;
+  }
+
+  .library-grid-header h2 {
+    font-size: clamp(1.35rem, 3vw, 2rem);
+  }
+
+  .dock-layout[hidden] {
+    display: none;
+  }
+
+  .dock-layout dl {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    margin: 0;
+    padding: 1px;
+    border-radius: .55rem;
+    background: #394e4e;
+    overflow: hidden;
+  }
+
+  .dock-layout dl > div {
+    min-inline-size: 0;
+    padding: .6rem .65rem;
+    background: #192c2b;
+  }
+
+  .dock-layout dl > div:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+
+  .dock-layout dt {
+    margin-block-end: .25rem;
+    color: #b1c7c0;
+    font-size: .72rem;
+  }
+
+  .dock-layout dd {
+    margin: 0;
+    color: #d4f6e9;
+    font: .77rem/1.55 ui-monospace, monospace;
+    overflow-wrap: anywhere;
+  }
+
+  @media print {
+    .measurement-overlay { display: none !important; }
+  }
+}

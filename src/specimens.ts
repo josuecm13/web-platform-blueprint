@@ -1,22 +1,25 @@
 import './specimens.css';
+import { measuredLayouts, previewDescription, type LayoutSnapshot } from './layout-measurements';
 
 const frame = document.querySelector<HTMLElement>('#card-preview');
 const card = frame?.querySelector<HTMLElement>('.lab-adaptive');
 const width = document.querySelector<HTMLInputElement>('#preview-width');
 const widthOutput = document.querySelector<HTMLOutputElement>('#preview-width-output');
 
-if (frame && card && width && widthOutput && typeof ResizeObserver === 'function') {
+const layout = card && measuredLayouts.get(card);
+if (frame && width && widthOutput && layout) {
+  const updateWidth = (measurement: LayoutSnapshot) => {
+    const description = previewDescription(measurement);
+    widthOutput.value = description;
+    width.setAttribute('aria-valuetext', description);
+  };
+
   width.closest<HTMLElement>('.lab-width-controls')!.hidden = false;
   width.addEventListener('input', () => {
     frame.style.setProperty('--preview-width', `${width.value}%`);
+    layout.update();
   });
-  new ResizeObserver(([entry]) => {
-    const pixels = Math.round(entry.contentRect.width);
-    const columns = getComputedStyle(card).gridTemplateColumns.split(' ').length;
-    const description = `${pixels} px · ${columns === 2 ? 'Two columns' : 'Stacked'}`;
-    widthOutput.value = description;
-    width.setAttribute('aria-valuetext', description);
-  }).observe(frame);
+  layout.subscribe(updateWidth);
 }
 
 const dialog = document.querySelector<HTMLDialogElement>('#demo-dialog');
