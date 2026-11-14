@@ -38,7 +38,7 @@ export const records = {
 }
 
 @container (min-width: 550px) {
-  .lab-adaptive {
+  #responsive-card:not([data-fallback-active]) .lab-adaptive {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }`,
@@ -105,17 +105,23 @@ export const records = {
     tier: 'Baseline',
     primitives: [':checked', 'CSS transitions', 'prefers-reduced-motion'],
     why: 'The shift shows how the plates are stacked. A native checkbox gives pointer, touch, and keyboard input the same control.',
-    fallback: 'With reduced motion enabled, the plates stay in place and the top plate changes color to show the selected state.',
+    fallback: 'With reduced motion enabled or without CSS translation and transition support, the plates stay in place and the top plate changes color to show the selected state.',
     source: {
       language: 'CSS',
-      code: `.lab-motion-toggle:checked ~ .lab-motion-art i {
-  translate: var(--shift) 0;
+      code: `.lab-motion-toggle:checked ~ .lab-motion-art i:last-child {
+  background: #205e50;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .lab-motion-toggle:checked ~ .lab-motion-art i {
-    translate: none;
-    transition: none;
+@supports (translate: 1px 0) and (transition: translate 1s) {
+  @media (prefers-reduced-motion: no-preference) {
+    html:not([data-motion="reduce"]) #layer-shift:not([data-fallback-active]) {
+      .lab-motion-art i {
+        transition: translate .34s ease, background-color .24s ease;
+      }
+      .lab-motion-toggle:checked ~ .lab-motion-art i {
+        translate: var(--shift) 0;
+      }
+    }
   }
 }`,
       url: specimenStyles,

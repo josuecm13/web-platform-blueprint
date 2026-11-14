@@ -13,5 +13,3 @@ const canvas=document.querySelector<HTMLCanvasElement>('#board');if(canvas){cons
 import './chromatic';
 
 import './inspect';
-
-import './specimens';

@@ -2,6 +2,7 @@ import './inspect.css';
 import { isRecordKey, records } from './inspect-records';
 import { layoutDetails, measuredLayouts } from './layout-measurements';
 import { isLiveSpecimenId, liveSpecimens } from './specimen-registry';
+import { specimenFallbacks } from './specimens';
 
 const modes = ['render', 'wireframe', 'inspect'] as const;
 type Mode = typeof modes[number];
@@ -47,11 +48,18 @@ dockContent.innerHTML = `
       <h3 class="dock-title" tabindex="-1"></h3>
       <p class="dock-why"></p>
       <div class="dock-share" hidden>
-        <button type="button" class="dock-share-button">Copy link</button>
+        <button type="button" class="dock-action">Copy link</button>
         <input type="url" readonly hidden aria-label="Specimen link">
         <p role="status"></p>
       </div>
     </div>
+    <section class="dock-section dock-fallback-preview" aria-labelledby="dock-fallback-preview-title" hidden>
+      <div class="dock-fallback-preview-header">
+        <h4 id="dock-fallback-preview-title">Behavior preview</h4>
+        <button type="button" class="dock-action" aria-pressed="false">Show fallback</button>
+      </div>
+      <p role="status"></p>
+    </section>
     <section class="dock-section dock-layout" hidden>
       <h4>Live layout</h4>
       <dl></dl>
@@ -99,6 +107,9 @@ const share = dockContent.querySelector<HTMLElement>('.dock-share')!;
 const copyLink = share.querySelector('button')!;
 const shareUrl = share.querySelector('input')!;
 const shareStatus = share.querySelector('[role="status"]')!;
+const fallbackPreview = dockContent.querySelector<HTMLElement>('.dock-fallback-preview')!;
+const fallbackToggle = fallbackPreview.querySelector('button')!;
+const fallbackStatus = fallbackPreview.querySelector('[role="status"]')!;
 
 const specimens = [...document.querySelectorAll<HTMLElement>('[data-inspect-record], [data-specimen-id]')].flatMap(specimen => {
   const id = specimen.hasAttribute('data-specimen-id') && isLiveSpecimenId(specimen.id)
@@ -201,6 +212,24 @@ function dismissReference(restoreFocus = true) {
   invoker = undefined;
 }
 
+function updateFallbackPreview() {
+  const control = selected && specimenFallbacks.get(selected.section);
+  fallbackPreview.hidden = !control;
+  if (!control) return;
+
+  const { simulated, active, reason } = control.describe();
+  fallbackToggle.setAttribute('aria-pressed', String(simulated));
+  const message = active ? `Fallback active. ${reason}` : 'Enhanced behavior active.';
+  if (fallbackStatus.textContent !== message) fallbackStatus.textContent = message;
+}
+
+fallbackToggle.addEventListener('click', () => {
+  if (selected) specimenFallbacks.get(selected.section)?.toggle();
+});
+document.addEventListener('specimen-fallback-change', event => {
+  if (event.target === selected?.section) updateFallbackPreview();
+});
+
 function renderReference(specimen: Specimen) {
   clearSelection();
   selected = specimen;
@@ -210,6 +239,7 @@ function renderReference(specimen: Specimen) {
   share.hidden = !specimen.id;
   shareUrl.hidden = true;
   shareStatus.textContent = '';
+  updateFallbackPreview();
   const layout = measuredLayouts.get(specimen.target);
   layoutSection.hidden = !layout;
   if (layout) {
