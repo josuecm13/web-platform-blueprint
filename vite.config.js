@@ -1,8 +1,22 @@
 import { defineConfig } from 'vite';
-import { resolve } from 'node:path';
+import { dirname, relative, resolve, sep } from 'node:path';
+import { specimenLink } from './src/specimen-registry.ts';
+
+const root = resolve('.');
 export default defineConfig({
   base: './',
   plugins: [{
+    name: 'resolve-specimen-links',
+    transformIndexHtml: {
+      order: 'pre',
+      handler(html, { filename }) {
+        const relativeRoot = relative(dirname(filename), root).split(sep).join('/');
+        const siteRoot = relativeRoot ? `${relativeRoot}/` : './';
+        return html.replace(/<a data-specimen-link="([\w-]+)">/g, (_, id) =>
+          `<a href="${specimenLink(id, siteRoot)}">`);
+      },
+    },
+  }, {
     name: 'preserve-entry-render-blocking',
     apply: 'build',
     // Vite recreates bundled module tags and drops the source tag's blocking

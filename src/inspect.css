@@ -354,3 +354,30 @@
 @media (max-width: 56rem) {
   html[data-reference-open] .chromatic-settings { visibility: hidden; }
 }
+
+@layer inspect {
+  [data-specimen-id] { scroll-margin-block-start: 1rem; }
+  .dock-share { display: grid; justify-items: start; gap: .45rem; margin-block-start: .85rem; }
+  .dock-share[hidden], .dock-share p:empty { display: none; }
+  .dock-share .dock-share-button {
+    min-block-size: 2.75rem;
+    padding: .45rem .7rem;
+    border: 1px solid #50796f;
+    border-radius: .5rem;
+    background: #233b37;
+    color: var(--inspect-accent);
+    font-size: .78rem;
+    font-weight: 650;
+  }
+  .dock-share .dock-share-button:hover { background: #31524b; }
+  .dock-share input {
+    inline-size: 100%;
+    min-inline-size: 0;
+    padding: .45rem;
+    border: 1px solid #50796f;
+    border-radius: .35rem;
+    background: var(--inspect-panel);
+    color: #eaf3f1;
+    font-size: .8rem;
+  }
+}

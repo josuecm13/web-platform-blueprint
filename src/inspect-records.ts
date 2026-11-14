@@ -1,5 +1,7 @@
 /// <reference types="vite/client" />
 import pageSource from '../components/index.html?url&no-inline';
+import homeSource from '../index.html?url&no-inline';
+import canvasSource from '../playground/index.html?url&no-inline';
 import layoutSource from './style.css?url&no-inline';
 import specimenStyles from './specimens.css?url&no-inline';
 
@@ -124,6 +126,49 @@ export const records = {
       { label: 'Reduced motion', url: `${mdn}/Web/CSS/Reference/At-rules/@media/prefers-reduced-motion` },
     ],
   },
+  disclosure: {
+    name: 'Native disclosure',
+    element: '<details>',
+    tier: 'Baseline',
+    primitives: ['<details>', '<summary>', 'name'],
+    why: 'The FAQ uses semantic disclosure controls for keyboard, touch, and pointer input. A shared name groups the disclosures so supported browsers open one answer at a time.',
+    fallback: 'If grouping is unavailable, each answer can still be opened independently.',
+    source: {
+      language: 'HTML',
+      code: `<details name="faq">
+  <summary>What is this project?</summary>
+  <p>A complete web application and a field guide to browser-native capabilities.</p>
+</details>`,
+      url: homeSource,
+      filename: 'index.html',
+    },
+    docs: [
+      { label: 'HTML details element', url: `${mdn}/Web/HTML/Reference/Elements/details` },
+    ],
+  },
+  canvas: {
+    name: 'Canvas 2D',
+    element: '<canvas>',
+    tier: 'Baseline',
+    primitives: ['CanvasRenderingContext2D', 'Pointer Events', 'ResizeObserver'],
+    why: 'The drawing surface maps pointer input to a square on a grid. Directional buttons let readers explore the same position with the keyboard.',
+    fallback: 'The drawing experiment includes a text description and position readout. If JavaScript is disabled, the description remains readable.',
+    source: {
+      language: 'HTML',
+      code: `<canvas id="board" width="900" height="400"
+  aria-label="A square on a grid; use the directional buttons to move it">
+  Your browser does not support canvas.
+</canvas>
+<button data-move="left">← Left</button>
+<p id="position" aria-live="polite">Square position: center.</p>`,
+      url: canvasSource,
+      filename: 'index.html',
+    },
+    docs: [
+      { label: 'Canvas API', url: `${mdn}/Web/API/Canvas_API` },
+      { label: 'Pointer Events', url: `${mdn}/Web/API/Pointer_events` },
+    ],
+  },
   heading: {
     name: 'Chromatic heading',
     element: '<h1>',
@@ -148,6 +193,8 @@ export const records = {
   },
 } satisfies Record<string, RecordEntry>;
 
-export function isRecordKey(key: string): key is keyof typeof records {
+export type InspectRecordKey = keyof typeof records;
+
+export function isRecordKey(key: string): key is InspectRecordKey {
   return Object.hasOwn(records, key);
 }

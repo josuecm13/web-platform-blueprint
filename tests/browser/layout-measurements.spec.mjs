@@ -58,7 +58,7 @@ test('the Library reports rendered tracks across reflow and filtering, with a to
   await page.getByRole('button', { name: 'Wireframe' }).click();
   const overlay = page.locator('#specimens .measurement-overlay');
   await expect(overlay.locator('.measurement-columns > span')).toHaveCount(3);
-  await expect(overlay.locator('.measurement-rows > span')).toHaveCount(3);
+  await expect(overlay.locator('.measurement-rows > span')).toHaveCount(4);
   const [track, card] = await Promise.all([
     overlay.locator('.measurement-columns > span').nth(1).boundingBox(),
     page.locator('#specimens .specimen').nth(1).boundingBox(),
@@ -71,7 +71,7 @@ test('the Library reports rendered tracks across reflow and filtering, with a to
   await page.getByRole('button', { name: 'Inspect', exact: true }).click();
   await page.getByRole('button', { name: 'Inspect Library grid' }).click();
   const dock = page.getByRole('complementary', { name: 'Reference Dock' });
-  await expect(measure(dock, 'Layout')).toHaveText('3 columns · 3 rows');
+  await expect(measure(dock, 'Layout')).toHaveText('3 columns · 4 rows');
 
   const search = page.getByRole('searchbox', { name: 'Search specimens' });
   await search.fill('dialog');
@@ -80,7 +80,7 @@ test('the Library reports rendered tracks across reflow and filtering, with a to
   await expect(measure(dock, 'Row tracks')).toHaveText('None');
   await expect(overlay).toBeHidden();
   await search.clear();
-  await expect(measure(dock, 'Layout')).toHaveText('3 columns · 3 rows');
+  await expect(measure(dock, 'Layout')).toHaveText('3 columns · 4 rows');
 
   const touch = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
   try {
@@ -88,7 +88,7 @@ test('the Library reports rendered tracks across reflow and filtering, with a to
     await touch.getByRole('button', { name: 'Inspect', exact: true }).tap();
     await touch.getByRole('button', { name: 'Inspect Library grid' }).tap();
     const sheet = touch.getByRole('dialog', { name: 'Reference Dock' });
-    await expect(measure(sheet, 'Layout')).toHaveText('1 column · 9 rows');
+    await expect(measure(sheet, 'Layout')).toHaveText('1 column · 10 rows');
     await sheet.getByRole('button', { name: 'Close reference' }).tap();
     await expect(touch.getByRole('button', { name: 'Inspect Library grid' })).toBeFocused();
   } finally {
