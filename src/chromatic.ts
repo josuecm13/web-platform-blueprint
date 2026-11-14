@@ -70,7 +70,8 @@ if (!supported || !context) {
 
   function resize() {
     if (failed) return;
-    source.style.width = `${document.documentElement.clientWidth}px`;
+    const dockSpace = parseFloat(getComputedStyle(document.body).paddingInlineEnd) || 0;
+    source.style.width = `${document.documentElement.clientWidth - dockSpace}px`;
     ratio = window.devicePixelRatio || 1;
     // The drawable snapshot is the border box, not the scrollable overflow.
     const height = source.offsetHeight;
@@ -152,6 +153,8 @@ if (!supported || !context) {
   });
   const observer = new ResizeObserver(resize);
   observer.observe(source);
+  // The dock changes the body content box without resizing the viewport.
+  observer.observe(document.body);
   window.addEventListener('resize', resize);
   window.addEventListener('scroll', () => {
     if (!failed) surface.requestPaint!();

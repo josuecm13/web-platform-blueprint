@@ -1,2 +1,92 @@
 <!doctype html>
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="A native-first field guide to the web platform."><title>components — Web Platform Blueprint</title><link rel="stylesheet" href="../src/style.css"><script type="module" blocking="render" src="../src/main.ts"></script></head><body><a class="skip" href="#main">Skip to content</a><header class="site-header"><a class="brand" href="../"><span class="brand-mark">✳</span><span>WEB PLATFORM<br><b>BLUEPRINT</b></span></a><nav aria-label="Main navigation"><a href="../">Home</a><a href="../library/">Library</a><a href="../workspace/">Workspace</a><a href="../components/" aria-current="page">Components</a><a href="../playground/">Playground</a><a href="../preferences/">Preferences</a></nav><span class="header-meta">FIELD GUIDE / 2026</span></header><main id="main"><section class="page-head"><p class="eyebrow">SPECIMEN / 001</p><h1>Container query<span>.</span></h1><p class="lead">A card that responds to the space available to its container.</p></section><section class="section"><div class="section-head"><div><p class="eyebrow">LIVE SPECIMEN</p><h2>Resize the frame.</h2></div><p>Drag the lower-right corner to change the container width.</p></div><div class="resize-frame"><article class="adaptive card"><div class="sample-image" aria-hidden="true"></div><div><span class="number">LAYOUT / 001</span><h3>A responsive card</h3><p>This composition adapts to its container instead of the viewport.</p><button id="dialog-open" type="button">Open native dialog ↗</button></div></article></div><dialog id="demo-dialog" aria-labelledby="dialog-title"><h2 id="dialog-title">A native dialog.</h2><p>The browser provides a modal top layer and keyboard dismissal.</p><form method="dialog"><button>Close</button></form></dialog></section><section class="section"><div class="grid two"><article><p class="eyebrow">HOW IT WORKS</p><h2>Component context matters.</h2><p>Container queries let the card choose its layout based on the space it receives. In older browsers the stacked layout remains readable.</p></article><aside class="note"><p class="eyebrow">REFERENCE / 001</p><h3>Read further</h3><p>Native primitives: <code>article</code>, CSS Grid and <code>@container</code>.</p><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Containment/Container_queries">MDN: Container queries ↗</a><br><a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/dialog">MDN: Dialog ↗</a></aside></div></section></main><footer class="site-footer"><div><a class="brand" href="../"><span class="brand-mark">✳</span><span>WEB PLATFORM<br><b>BLUEPRINT</b></span></a><p>An exploration of the web, built with the web.</p></div><div><span class="number">EXPLORE</span><nav aria-label="Footer navigation"><a href="../">Home</a><a href="../library/">Library</a><a href="../workspace/">Workspace</a><a href="../components/">Components</a><a href="../playground/">Playground</a><a href="../preferences/">Preferences</a></nav></div><div><span class="number">PROJECT</span><p>Native first.<br>Built to be understood.</p><a href="https://github.com/josuecm13/web-platform-blueprint">View source ↗</a></div><div class="footer-bottom"><span>WEB PLATFORM BLUEPRINT / 2026</span><span>MADE OF HTML, CSS &amp; CURIOSITY</span></div></footer></body></html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="A native-first field guide to the web platform."><title>components — Web Platform Blueprint</title><link rel="stylesheet" href="../src/style.css"><script type="module" blocking="render" src="../src/main.ts"></script></head><body><a class="skip" href="#main">Skip to content</a><header class="site-header"><a class="brand" href="../"><span class="brand-mark">✳</span><span>WEB PLATFORM<br><b>BLUEPRINT</b></span></a><nav aria-label="Main navigation"><a href="../">Home</a><a href="../library/">Library</a><a href="../workspace/">Workspace</a><a href="../components/" aria-current="page">Components</a><a href="../playground/">Playground</a><a href="../preferences/">Preferences</a></nav><span class="header-meta">FIELD GUIDE / 2026</span></header><main id="main" class="component-lab">
+  <section class="lab-intro" aria-labelledby="lab-title">
+    <div class="lab-intro-copy">
+      <h1 id="lab-title">Component <em>lab.</em></h1>
+      <p class="lab-lead">Explore how layout, interaction, and motion work in the browser.</p>
+      <button type="button" class="lab-start" data-inspect-start hidden>
+        <span aria-hidden="true" class="inspect-icon icon-target"></span>
+        Inspect a specimen <span aria-hidden="true">→</span>
+      </button>
+    </div>
+    <div class="lab-diagram" aria-hidden="true">
+      <i class="lab-diagram-axis axis-x"></i><i class="lab-diagram-axis axis-y"></i>
+      <div class="lab-diagram-sheet sheet-back"></div>
+      <div class="lab-diagram-sheet sheet-middle"></div>
+      <div class="lab-diagram-sheet sheet-front"><i></i><i></i><i></i></div>
+    </div>
+  </section>
+
+  <div class="lab-specimens" aria-label="Live specimens">
+    <section class="lab-specimen lab-specimen-wide" data-inspect-record="card" aria-labelledby="card-heading">
+      <header class="lab-specimen-header">
+        <div>
+          <p class="lab-kicker">Layout</p>
+          <h2 id="card-heading">Container query</h2>
+        </div>
+        <div data-inspect-controls></div>
+      </header>
+      <div class="lab-width-controls" hidden>
+        <label for="preview-width">Preview width</label>
+        <input id="preview-width" type="range" min="35" max="100" value="100">
+        <output for="preview-width" id="preview-width-output"></output>
+      </div>
+      <div class="lab-stage lab-card-stage">
+        <div class="resize-frame" id="card-preview">
+          <article class="lab-adaptive" data-inspect-target>
+            <div class="lab-card-art" aria-hidden="true"><i></i><i></i><i></i></div>
+            <div class="lab-card-copy">
+              <p class="lab-kicker">Live preview</p>
+              <h3>A responsive card.</h3>
+              <p>Two columns open up when the container reaches 550 px. Shrink the preview to see the layout stack.</p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="lab-specimen" data-inspect-record="dialog" aria-labelledby="dialog-heading">
+      <header class="lab-specimen-header">
+        <div>
+          <p class="lab-kicker">Interaction</p>
+          <h2 id="dialog-heading">Native dialog</h2>
+        </div>
+        <div data-inspect-controls></div>
+      </header>
+      <div class="lab-stage lab-dialog-stage" data-inspect-target>
+        <div class="lab-dialog-art" aria-hidden="true"><i></i><i></i><i></i><b>→</b></div>
+        <button id="dialog-open" class="lab-demo-button" type="button" aria-haspopup="dialog" aria-controls="demo-dialog" hidden>Open dialog <span aria-hidden="true">→</span></button>
+        <details id="dialog-fallback">
+          <summary>Read the dialog content</summary>
+          <p>The browser’s native dialog provides a modal top layer, focus containment, and Escape dismissal.</p>
+        </details>
+      </div>
+      <dialog id="demo-dialog" class="lab-dialog" aria-labelledby="dialog-title">
+        <p class="lab-kicker">Interaction</p>
+        <h2 id="dialog-title">A native dialog.</h2>
+        <p>The browser provides a modal top layer, focus containment, and Escape dismissal.</p>
+        <form method="dialog"><button class="lab-demo-button" autofocus>Close dialog</button></form>
+      </dialog>
+    </section>
+
+    <section class="lab-specimen" data-inspect-record="motion" aria-labelledby="motion-heading">
+      <header class="lab-specimen-header">
+        <div>
+          <p class="lab-kicker">Motion</p>
+          <h2 id="motion-heading">Layer shift</h2>
+        </div>
+        <div data-inspect-controls></div>
+      </header>
+      <div class="lab-stage lab-motion-stage" data-inspect-target>
+        <input type="checkbox" class="lab-motion-toggle" id="shift-layers">
+        <label for="shift-layers">Shift layers</label>
+        <div class="lab-motion-art" aria-hidden="true"><i></i><i></i><i></i></div>
+      </div>
+    </section>
+  </div>
+  <nav class="lab-reading" aria-label="Specimen documentation">
+    <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Guides/Containment/Container_queries">Container queries →</a>
+    <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/dialog">HTML dialog →</a>
+    <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/At-rules/@media/prefers-reduced-motion">Reduced motion →</a>
+  </nav>
+</main><footer class="site-footer"><div><a class="brand" href="../"><span class="brand-mark">✳</span><span>WEB PLATFORM<br><b>BLUEPRINT</b></span></a><p>An exploration of the web, built with the web.</p></div><div><span class="number">EXPLORE</span><nav aria-label="Footer navigation"><a href="../">Home</a><a href="../library/">Library</a><a href="../workspace/">Workspace</a><a href="../components/">Components</a><a href="../playground/">Playground</a><a href="../preferences/">Preferences</a></nav></div><div><span class="number">PROJECT</span><p>Native first.<br>Built to be understood.</p><a href="https://github.com/josuecm13/web-platform-blueprint">View source →</a></div><div class="footer-bottom"><span>WEB PLATFORM BLUEPRINT / 2026</span><span>MADE OF HTML, CSS &amp; CURIOSITY</span></div></footer></body></html>
