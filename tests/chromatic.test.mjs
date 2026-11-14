@@ -113,12 +113,13 @@ function setup(dpr, supported = true, env = {}) {
     requestAnimationFrame: callback => frames.push(callback),
     sessionStorage: { getItem: key => storage.get(key) ?? null, setItem: (key, value) => storage.set(key, value),
       removeItem: key => storage.delete(key) },
-    getComputedStyle: () => ({ backgroundColor: '#fff' }),
+    getComputedStyle: () => ({ backgroundColor: '#fff', paddingInlineEnd: body.style.paddingInlineEnd }),
     DOMMatrix: class { a = 1; b = 0; c = 0; d = 1; e = 0; f = 0; },
     ResizeObserver: class {
       disconnected = false;
       constructor(callback) { this.callback = callback; observer = this; }
-      observe() {}
+      targets = [];
+    observe(target) { this.targets.push(target); }
       disconnect() { this.disconnected = true; }
     },
   });
@@ -242,6 +243,28 @@ test('responsive layout changes keep the previous bitmap until a fresh paint', (
   surface.listeners.paint();
   surface.listeners.paint();
   assert.deepEqual(surface.dimensionWrites, []);
+});
+
+test('opening and closing the dock resizes the drawable page without stretching it', () => {
+  const app = setup(2);
+  const [surface] = app.body.childNodes;
+  const [source] = surface.childNodes;
+  app.document.documentElement.clientWidth = 1000;
+  Object.defineProperty(source, 'offsetWidth', { get: () => parseFloat(source.style.width) });
+  assert.ok(app.observer.targets.includes(app.body));
+
+  app.body.style.paddingInlineEnd = '400px';
+  app.observer.callback();
+  surface.listeners.paint();
+  assert.equal(surface.style.width, '600px');
+  assert.equal(app.destination.width, 1200);
+  assert.equal(app.geometry.element, source);
+
+  app.body.style.paddingInlineEnd = '0px';
+  app.observer.callback();
+  surface.listeners.paint();
+  assert.equal(surface.style.width, '1000px');
+  assert.equal(app.destination.width, 2000);
 });
 
 // Run queued animation frames at the given timestamps (ms since the glitch started).

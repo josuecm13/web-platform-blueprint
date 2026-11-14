@@ -69,7 +69,9 @@ Scroll-driven animations, scroll-state container queries, anchored container que
 
 ## Status
 
-The first version includes six static pages, a responsive component library, an interactive canvas and locally stored preferences. The Inspect / Reference Dock experience is tracked separately.
+The first version includes six static pages, a responsive component library, an interactive canvas and locally stored preferences. The **Render**, **Wireframe**, and **Inspect** controls appear on every page and retain the current mode as you navigate. On the Components page, choose **Inspect a specimen** to open the Reference Dock. Use its arrows to switch between the responsive card, native dialog, and layer shift without navigating. The dock sits beside the live page on desktop and opens as a modal sheet on narrow screens. Each record lists the semantic element, support tier, fallback, source, and documentation.
+
+To add a specimen, define its record in `src/inspect-records.ts`. Give the specimen wrapper a matching `data-inspect-record` value, mark the part to highlight with `data-inspect-target`, and leave a `data-inspect-controls` container for the Inspect button.
 
 All pages include a chromatic aberration experiment using [HTML-in-Canvas](https://developer.chrome.com/docs/web-platform/html-in-canvas). Open the bottom-right control to adjust the RGB channel split (0 removes it), or choose **Use normal HTML** to restore ordinary DOM rendering. On supporting browsers, the whole page's real HTML is drawn into a canvas; unsupported browsers and rendering errors retain ordinary HTML. The effect redraws on demand. The only animation is a short glitch (shake, wider channel split and torn rows) when following a link to another page of the app, which settles on arrival. Reduced motion, from the system or the Preferences page, skips it. Browser interaction, accessibility, and performance on long pages still need browser verification. The implementation targets the current `content="drawable"` / `drawable` API rather than the older `layoutsubtree` prototype.
 
@@ -78,6 +80,8 @@ This expands the Playground scope of [issue #5](https://github.com/josuecm13/web
 ## Run locally
 
 Requires Node.js. Run `npm install`, then `npm run dev` for development or `npm run build` followed by `npm run preview` for a production preview.
+
+Run `node --test tests/chromatic.test.mjs` for the canvas model tests. For the Inspect mode browser checks, run `npx playwright install chromium` and then `npm run test:browser`.
 
 The application uses real HTML documents and ordinary links. Core content and navigation remain available without JavaScript; filtering, canvas interaction and preference persistence progressively enhance the experience.
 
