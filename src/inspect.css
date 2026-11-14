@@ -1,0 +1,18 @@
+@layer inspect {
+  .inspect-toolbar{position:fixed;left:1rem;bottom:1rem;z-index:1000;padding:.3rem;background:#f7f7f4;border:1px solid #9ca69c;box-shadow:0 5px 24px #0002}
+  .inspect-toolbar [role="group"]{display:flex;gap:.2rem}
+  .inspect-toolbar button{padding:.65rem .8rem;font-size:.75rem;background:transparent;color:#252c28;border:1px solid transparent}
+  .inspect-toolbar button[aria-pressed="true"]{background:#252c28;color:white}
+  html[data-inspect-mode="wireframe"] main :is(section,article,aside,header,nav,.card,.grid){outline:1px dashed #668475;outline-offset:-2px}
+  html[data-inspect-mode="inspect"] .inspect-target{outline:2px dashed #668475;outline-offset:3px;position:relative}
+  .inspect-target.inspect-selected{outline:3px solid #2b6650!important}
+  .inspect-select{position:relative;z-index:2;display:block;width:max-content;max-width:100%;margin:0 0 .8rem 0;padding:.4rem .6rem;background:#234f3e;color:white;font-size:.75rem}
+  .inspect-select[hidden],.reference-dock[hidden]{display:none!important}
+  .reference-dock{position:fixed;right:0;top:0;bottom:0;width:min(390px,100vw);z-index:1100;background:#f7f7f4;border-left:1px solid #a7b0a6;box-shadow:-8px 0 28px #0002;overflow:auto;padding:1.5rem}
+  .reference-dock h2{font-size:1.5rem;margin:0 0 1rem}
+  .reference-dock h3{font-size:1.2rem;margin:1rem 0}
+  .reference-dock p{margin:.7rem 0;font-size:.88rem}
+  .reference-dock ul{padding-left:1.4rem;line-height:1.7;font-size:.85rem}
+  .dock-close{padding:.6rem .8rem}
+  @media(max-width:650px){.reference-dock{top:auto;left:0;width:100%;height:min(70dvh,550px);border-left:0;border-top:1px solid #a7b0a6;border-radius:1rem 1rem 0 0}.inspect-toolbar{bottom:.5rem;left:.5rem}}
+}
