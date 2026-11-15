@@ -3,9 +3,10 @@ import { applyPreferences, readPreferences } from '../preferences';
 import { specimenLink } from '../specimen-registry';
 import { bindDrag, type Point } from './drag';
 import { iconMarkup, mountIcons } from './icons';
-import { allBlocks, arrangements, block, buildPrompt, copyBlock, effects, insertion, intensities, limit, loadProject, locate, patterns, presets, ranges, saveProject, sheet, spacings,
+import { allBlocks, block, buildPrompt, copyBlock, insertion, limit, loadProject, locate, patterns, presets, saveProject, sheet,
   type Block, type Placement, type Pattern, type Preset, type Project, type Sheet } from './model';
 import { createCanvas } from './preview';
+import { outlineMarkup, propertiesMarkup } from './structure-view';
 
 const get = <T extends HTMLElement = HTMLElement>(selector: string) => document.querySelector<T>(selector)!;
 const buttons = get('#palette-items');
@@ -123,52 +124,13 @@ function draw(reset = false) {
   historyButtons();
 }
 
-function makeOptions(values: Record<string, string>, selected: string) {
-  return Object.entries(values).map(([id, name]) => `<option value="${id}"${id === selected ? ' selected' : ''}>${name}</option>`).join('');
-}
-
 function pick(value?: string, scroll = false) {
   if (selected !== value) closePreviewReference();
   selected = value;
   canvas.select(value, scroll);
   const blocks = current().blocks;
-  function rows(items: Block[]): string {
-    return items.map(item => `<li><button type="button" data-action="pick" data-id="${item.id}"${value === item.id ? ' aria-current="true"' : ''}>${iconMarkup(patterns[item.kind].icon)}${patterns[item.kind].label}</button>
-      ${item.children?.length ? `<ol>${rows(item.children)}</ol>` : ''}</li>`).join('');
-  }
-  outline.innerHTML = rows(blocks);
-  const location = locate(blocks, value);
-  if (!location) {
-    properties.innerHTML = '<p>Select an element to adjust its layout and motion.</p>';
-    return;
-  }
-  const { items, index, parent } = location;
-  const item = items[index];
-  const descendants = new Set(allBlocks([item]).map(block => block.id));
-  const containers: Record<string, string> = { root: 'Canvas' };
-  let groupNumber = 0;
-  for (const group of allBlocks(blocks).filter(block => block.kind === 'group')) {
-    groupNumber++;
-    if (!descendants.has(group.id)) containers[group.id] = `Layout group ${groupNumber}`;
-  }
-  properties.innerHTML = `
-    <h3>${patterns[item.kind].label}</h3><p>${patterns[item.kind].description}</p>
-    <label>Spacing<select name="spacing">${makeOptions(spacings, item.spacing)}</select></label>
-    ${item.kind === 'grid' ? `<label>Columns on wide screens<select name="columns">${makeOptions({'2':'2','3':'3','4':'4'}, String(item.columns))}</select></label>` : ''}
-    ${Object.keys(containers).length > 1 ? `<label>Container<select name="container">${makeOptions(containers, parent?.id ?? 'root')}</select></label>` : ''}
-    ${item.kind === 'group' ? `<label>Arrangement<select name="arrangement">${makeOptions(arrangements, item.arrangement ?? 'stack')}</select></label>` : ''}
-    <label>Scroll effect<select name="effect">${makeOptions(effects, item.effect)}</select></label>
-    ${item.effect !== 'none' ? `
-      <label>Scroll range<select name="range">${makeOptions(ranges, item.range ?? 'entry')}</select></label>
-      <label>Intensity<select name="intensity">${makeOptions(intensities, item.intensity ?? 'regular')}</select></label>
-      <button type="button" data-action="motion-start">Jump before effect</button><button type="button" data-action="inspect-motion">Inspect scroll motion</button>` : ''}
-    <div class="studio-segments" role="group" aria-label="Element actions">
-      <button type="button" data-action="up" aria-label="Move up"${index === 0 ? ' disabled' : ''}>${iconMarkup('up')}</button>
-      <button type="button" data-action="down" aria-label="Move down"${index === items.length - 1 ? ' disabled' : ''}>${iconMarkup('down')}</button>
-      <button type="button" data-action="duplicate" aria-label="Duplicate element">${iconMarkup('copy')}</button>
-      <button type="button" data-action="remove" aria-label="Remove element">${iconMarkup('trash')}</button>
-    </div>
-    <button type="button" data-action="inspect">Inspect pattern</button>`;
+  outline.innerHTML = outlineMarkup(blocks, value);
+  properties.innerHTML = propertiesMarkup(blocks, value);
 }
 
 function add(kind: Pattern, placement: Placement, copy?: Block) {
