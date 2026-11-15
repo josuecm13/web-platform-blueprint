@@ -86,7 +86,7 @@ Workspace offers **Empty**, **Typical**, and **Crowded** datasets. Search or sor
 
 ## Layout Studio
 
-Open **Create** to arrange browser-native patterns on an interactive wireframe. Drag elements from the palette, move an existing element with its canvas handle, or use the add and move buttons. Switch to phone width to see grids reflow. Test scroll-driven rise, fade, and scale effects with a static fallback for unsupported browsers and reduced motion.
+Open **Create** to arrange browser-native patterns on an interactive wireframe. Drag elements from the palette, move an existing element with its canvas handle, or use the add and move buttons. Drop elements inside a **Layout group**, then choose a stack or a row that responds to the group’s own width. Switch to phone width to see grids reflow. Tune the scroll range and intensity of rise, fade, and scale effects, then use the scrubber or scroll the canvas. **Static preview** shows the same fallback used when scroll timelines are unavailable or reduced motion is requested.
 
 In **Workflow**, describe the UX philosophy and generate a reusable prompt for a sibling layout or the next step. Next-step layouts can be tested from the source action in the canvas. Layouts save locally.
 

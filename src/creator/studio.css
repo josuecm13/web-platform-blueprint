@@ -82,3 +82,7 @@ html[data-inspect-mode="wireframe"] .studio-shell :is(section,aside,header) { ou
 #palette-items button { touch-action:none; user-select:none; }
 .drag-ghost { position:fixed; z-index:150; left:0; top:0; pointer-events:none; padding:.44rem .65rem; border-radius:.35rem; background:#344ac2; color:white; box-shadow:0 3px 10px #1c285444; font:600 .78rem system-ui,sans-serif; }
 #canvas { container:layout-canvas / inline-size; overflow:auto; overscroll-behavior:contain; }
+#outline ol { list-style:none; padding:.23rem 0 .23rem .48rem; margin:0 0 0 .52rem; border-inline-start:1px solid #c1cdef; display:grid; gap:.21rem; }
+.studio-shell label.scrubber { display:flex; align-items:center; gap:.4rem; flex:1 1 12rem; max-width:24rem; }
+.studio-shell .scrubber input { padding:0; width:auto; flex:1; accent-color:var(--blue); }
+.scrubber output { min-width:2.4rem; text-align:end; font-variant-numeric:tabular-nums; }

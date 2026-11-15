@@ -3,8 +3,8 @@ import { applyPreferences, readPreferences } from '../preferences';
 import { specimenLink } from '../specimen-registry';
 import { bindDrag, type Point } from './drag';
 import { iconMarkup, mountIcons } from './icons';
-import { block, buildPrompt, effects, id, limit, loadProject, patterns, presets, saveProject, sheet, spacings,
-  type Block, type Pattern, type Preset, type Project, type Sheet } from './model';
+import { allBlocks, arrangements, block, buildPrompt, copyBlock, effects, insertion, intensities, limit, loadProject, locate, patterns, presets, ranges, saveProject, sheet, spacings,
+  type Block, type Placement, type Pattern, type Preset, type Project, type Sheet } from './model';
 import { createCanvas } from './preview';
 
 const get = <T extends HTMLElement = HTMLElement>(selector: string) => document.querySelector<T>(selector)!;
@@ -15,12 +15,14 @@ const properties = get('#properties');
 const dialog = get<HTMLDialogElement>('#new-dialog');
 const related = get<HTMLFormElement>('#related');
 const philosophy = get<HTMLTextAreaElement>('#philosophy');
+const scrubber = get<HTMLInputElement>('#scrubber');
 const prompt = get<HTMLTextAreaElement>('#prompt');
 const siteRoot = new URL('../', location.href).href;
 
 applyPreferences(readPreferences());
 let project = loadProject();
 let playing = false;
+let staticMotion = false;
 let selected: string | undefined = current().blocks[0]?.id;
 type Dragged = { kind: Pattern } | { id: string };
 let dragPoint: Point | undefined;
@@ -34,16 +36,17 @@ const redo: Project[] = [];
 
 function current() { return project.sheets.find(item => item.id === project.active)!; }
 function nextSheet() { return project.sheets.find(item => item.id === current().next); }
-function currentBlock() { return current().blocks.find(item => item.id === selected); }
+function currentBlock() { return allBlocks(current().blocks).find(item => item.id === selected); }
 function notify(text: string) { get('#feedback').textContent = text; }
 
 function moveDrag(entry: Dragged, point: Point) {
-  const kind = 'kind' in entry ? entry.kind : current().blocks.find(item => item.id === entry.id)?.kind;
+  const kind = 'kind' in entry ? entry.kind : allBlocks(current().blocks).find(item => item.id === entry.id)?.kind;
   if (!kind) return;
   ghost.textContent = patterns[kind].label;
   ghost.hidden = false;
   ghost.style.translate = `${point.x + 13}px ${point.y + 13}px`;
   dragPoint = point;
+  canvas.dragging(true);
   if (dragFrame) return;
   function update() {
     if (!dragPoint) return;
@@ -60,10 +63,11 @@ function finishDrag(entry: Dragged, point?: Point) {
   dragPoint = undefined;
   ghost.hidden = true;
   canvas.clearDrop();
+  canvas.dragging(false);
   if (!destination) return;
   setPlaying(false);
-  if ('kind' in entry) add(entry.kind, destination.target, destination.after);
-  else move(entry.id, destination.target, destination.after);
+  if ('kind' in entry) add(entry.kind, destination);
+  else move(entry.id, destination);
 }
 
 const canvas = createCanvas(get('#canvas'), {
@@ -72,6 +76,12 @@ const canvas = createCanvas(get('#canvas'), {
   moveDrag(id, point) { moveDrag({ id }, point); },
   finishDrag(id, point) { finishDrag({ id }, point); },
   resize(width) { if (width) get('#device-width').textContent = `${width} px`; },
+  scroll(percent, available) {
+    scrubber.value = String(percent);
+    scrubber.disabled = !available;
+    scrubber.setAttribute('aria-valuetext', `${percent}% scrolled`);
+    get('#scroll-position').textContent = `${percent}%`;
+  },
 });
 
 function persist() {
@@ -107,7 +117,7 @@ function draw(reset = false) {
   const page = current();
   picker.replaceChildren(...project.sheets.map(item => new Option(item.name, item.id, false, item.id === page.id)));
   get('#device-name').textContent = page.name;
-  get('#block-count').textContent = String(page.blocks.length);
+  get('#block-count').textContent = String(allBlocks(page.blocks).length);
   canvas.render(page, Boolean(nextSheet()), reset);
   pick(selected);
   historyButtons();
@@ -122,64 +132,87 @@ function pick(value?: string, scroll = false) {
   selected = value;
   canvas.select(value, scroll);
   const blocks = current().blocks;
-  outline.innerHTML = blocks.map(item => `<li><button type="button" data-action="pick" data-id="${item.id}"${value === item.id ? ' aria-current="true"' : ''}>${iconMarkup(patterns[item.kind].icon)}${patterns[item.kind].label}</button></li>`).join('');
-  const item = currentBlock();
-  if (!item) {
+  function rows(items: Block[]): string {
+    return items.map(item => `<li><button type="button" data-action="pick" data-id="${item.id}"${value === item.id ? ' aria-current="true"' : ''}>${iconMarkup(patterns[item.kind].icon)}${patterns[item.kind].label}</button>
+      ${item.children?.length ? `<ol>${rows(item.children)}</ol>` : ''}</li>`).join('');
+  }
+  outline.innerHTML = rows(blocks);
+  const location = locate(blocks, value);
+  if (!location) {
     properties.innerHTML = '<p>Select an element to adjust its layout and motion.</p>';
     return;
   }
-  const index = blocks.indexOf(item);
+  const { items, index, parent } = location;
+  const item = items[index];
+  const descendants = new Set(allBlocks([item]).map(block => block.id));
+  const containers: Record<string, string> = { root: 'Canvas' };
+  let groupNumber = 0;
+  for (const group of allBlocks(blocks).filter(block => block.kind === 'group')) {
+    groupNumber++;
+    if (!descendants.has(group.id)) containers[group.id] = `Layout group ${groupNumber}`;
+  }
   properties.innerHTML = `
     <h3>${patterns[item.kind].label}</h3><p>${patterns[item.kind].description}</p>
     <label>Spacing<select name="spacing">${makeOptions(spacings, item.spacing)}</select></label>
     ${item.kind === 'grid' ? `<label>Columns on wide screens<select name="columns">${makeOptions({'2':'2','3':'3','4':'4'}, String(item.columns))}</select></label>` : ''}
+    ${Object.keys(containers).length > 1 ? `<label>Container<select name="container">${makeOptions(containers, parent?.id ?? 'root')}</select></label>` : ''}
+    ${item.kind === 'group' ? `<label>Arrangement<select name="arrangement">${makeOptions(arrangements, item.arrangement ?? 'stack')}</select></label>` : ''}
     <label>Scroll effect<select name="effect">${makeOptions(effects, item.effect)}</select></label>
+    ${item.effect !== 'none' ? `
+      <label>Scroll range<select name="range">${makeOptions(ranges, item.range ?? 'entry')}</select></label>
+      <label>Intensity<select name="intensity">${makeOptions(intensities, item.intensity ?? 'regular')}</select></label>
+      <button type="button" data-action="motion-start">Jump before effect</button><button type="button" data-action="inspect-motion">Inspect scroll motion</button>` : ''}
     <div class="studio-segments" role="group" aria-label="Element actions">
       <button type="button" data-action="up" aria-label="Move up"${index === 0 ? ' disabled' : ''}>${iconMarkup('up')}</button>
-      <button type="button" data-action="down" aria-label="Move down"${index === blocks.length - 1 ? ' disabled' : ''}>${iconMarkup('down')}</button>
+      <button type="button" data-action="down" aria-label="Move down"${index === items.length - 1 ? ' disabled' : ''}>${iconMarkup('down')}</button>
       <button type="button" data-action="duplicate" aria-label="Duplicate element">${iconMarkup('copy')}</button>
       <button type="button" data-action="remove" aria-label="Remove element">${iconMarkup('trash')}</button>
     </div>
     <button type="button" data-action="inspect">Inspect pattern</button>`;
 }
 
-function add(kind: Pattern, target?: string, after = true, copy?: Block) {
-  if (current().blocks.length >= limit) return notify('Element limit reached.');
-  const item = copy ? { ...copy, id: id() } : block(kind);
-  const position = current().blocks.findIndex(b => b.id === target);
-  commit(() => current().blocks.splice(position < 0 ? current().blocks.length : position + Number(after), 0, item));
+function add(kind: Pattern, placement: Placement, copy?: Block) {
+  const blocks = current().blocks;
+  if (allBlocks(blocks).length + (copy ? allBlocks([copy]).length : 1) > limit) return notify('Element limit reached.');
+  const destination = insertion(blocks, placement);
+  if (!destination) return;
+  const item = copy ? copyBlock(copy) : block(kind);
+  commit(() => destination.items.splice(destination.index, 0, item));
   selected = item.id;
   draw();
   canvas.select(item.id, true);
   notify(`${patterns[kind].label} added.`);
 }
 
-function move(source: string, target?: string, after = false) {
-  if (source === target) return;
-  const blocks = [...current().blocks];
-  const start = blocks.findIndex(item => item.id === source);
-  if (start < 0) return;
-  const [item] = blocks.splice(start, 1);
-  const index = blocks.findIndex(item => item.id === target);
-  const end = index < 0 ? blocks.length : index + Number(after);
-  if (start === end) return;
-  blocks.splice(end, 0, item);
-  commit(() => { current().blocks = blocks; });
+function move(source: string, placement: Placement) {
+  const blocks = current().blocks;
+  const origin = locate(blocks, source);
+  const destination = insertion(blocks, placement);
+  if (!origin || !destination) return;
+  const item = origin.items[origin.index];
+  if (allBlocks([item]).some(block => block.id === placement.target)) return;
+  const sameList = origin.items === destination.items;
+  const index = destination.index - Number(sameList && destination.index > origin.index);
+  if (sameList && origin.index === index) return;
+  commit(() => {
+    origin.items.splice(origin.index, 1);
+    destination.items.splice(index, 0, item);
+  });
   selected = item.id;
   draw();
   canvas.select(item.id, true);
-  notify(`Moved to position ${end + 1}.`);
+  notify(placement.position === 'inside' ? 'Moved into group.' : `Moved to position ${index + 1}.`);
 }
 
-function inspectBlock() {
+function inspectBlock(motion = false) {
   const item = currentBlock();
   const target = item && canvas.node(item.id);
   if (!item || !target) return;
-  const keys = { nav: 'creatorNav', split: 'creatorHero', grid: 'creatorGrid', stack: 'creatorText', media: 'creatorMedia', disclosure: 'disclosure', action: 'creatorAction' } as const;
+  const keys = { group: 'creatorGroup', nav: 'creatorNav', split: 'creatorHero', grid: 'creatorGrid', stack: 'creatorText', media: 'creatorMedia', disclosure: 'disclosure', action: 'creatorAction' } as const;
   const specimen = item.kind === 'disclosure' ? 'native-disclosure' : item.kind === 'grid' ? 'responsive-card' : undefined;
-  inspectPreview(keys[item.kind], target, get('[data-action="inspect"]'), {
-    grid: target.querySelector<HTMLElement>('.measure') ?? undefined,
-    related: specimen ? { label: 'Open Library specimen', url: specimenLink(specimen, siteRoot) } : undefined,
+  inspectPreview(motion ? 'creatorMotion' : keys[item.kind], target, get(motion ? '[data-action="inspect-motion"]' : '[data-action="inspect"]'), {
+    grid: motion ? undefined : target.querySelector<HTMLElement>(':scope > .region > .measure, :scope > .region > .group-frame > .measure') ?? undefined,
+    related: !motion && specimen ? { label: 'Open Library specimen', url: specimenLink(specimen, siteRoot) } : undefined,
   });
 }
 
@@ -230,10 +263,18 @@ properties.addEventListener('change', event => {
   const input = event.target as HTMLSelectElement;
   const item = currentBlock();
   if (!item || !input.name) return;
+  if (input.name === 'container') {
+    move(item.id, { target: input.value === 'root' ? undefined : input.value, position: 'inside' });
+    properties.querySelector<HTMLElement>('[name="container"]')?.focus({ preventScroll: true });
+    return;
+  }
   commit(() => {
     if (input.name === 'columns') item.columns = Number(input.value) as Block['columns'];
     if (input.name === 'spacing') item.spacing = input.value as Block['spacing'];
     if (input.name === 'effect') item.effect = input.value as Block['effect'];
+    if (input.name === 'arrangement') item.arrangement = input.value as Block['arrangement'];
+    if (input.name === 'range') item.range = input.value as Block['range'];
+    if (input.name === 'intensity') item.intensity = input.value as Block['intensity'];
   });
   draw();
   properties.querySelector<HTMLElement>(`[name="${input.name}"]`)?.focus({ preventScroll: true });
@@ -257,12 +298,12 @@ related.addEventListener('submit', event => {
   const relation = data.get('relation') === 'next' ? 'next' : 'sibling';
   const target = sheet(name, relation === 'next' ? 'flow' : 'blank');
   target.philosophy = source.philosophy;
-  if (data.has('inherit')) target.blocks = source.blocks.map(item => ({ ...item, id: id() }));
+  if (data.has('inherit')) target.blocks = source.blocks.map(copyBlock);
   target.origin = { id: source.id, relation, handoff: String(data.get('handoff') ?? '') };
   commit(() => {
     if (relation === 'next') {
       source.next = target.id;
-      if (!source.blocks.some(item => item.kind === 'action') && source.blocks.length < limit) source.blocks.push(block('action'));
+      if (!allBlocks(source.blocks).some(item => item.kind === 'action') && allBlocks(source.blocks).length < limit) source.blocks.push(block('action'));
     }
     project.sheets.push(target);
   });
@@ -288,18 +329,25 @@ const actions: Record<string, (button: HTMLButtonElement) => void> = {
   workflow: () => workspace('workflow'),
   new: () => { if (project.sheets.length < limit) dialog.showModal(); else notify('Layout limit reached.'); },
   cancel: () => dialog.close(),
-  add: button => { setPlaying(false); add(button.dataset.kind as Pattern, selected); },
+  add: button => { setPlaying(false); add(button.dataset.kind as Pattern, { target: selected, position: currentBlock()?.kind === 'group' ? 'inside' : 'after' }); },
   pick: button => { pick(button.dataset.id, true); outline.querySelector<HTMLElement>('[aria-current]')?.focus({ preventScroll: true }); },
   up: () => step(-1),
   down: () => step(1),
-  inspect: inspectBlock,
-  duplicate: () => { const item = currentBlock(); if (item) add(item.kind, item.id, true, item); },
+  inspect: () => inspectBlock(),
+  'inspect-motion': () => inspectBlock(true),
+  'static-motion': button => {
+    staticMotion = !staticMotion;
+    button.setAttribute('aria-pressed', String(staticMotion));
+    canvas.staticMotion(staticMotion);
+    showMotionStatus();
+  },
+  duplicate: () => { const item = currentBlock(); if (item) add(item.kind, { target: item.id, position: 'after' }, item); },
   remove: () => {
-    const item = currentBlock();
-    if (!item) return;
-    const index = current().blocks.indexOf(item);
-    commit(() => current().blocks.splice(index, 1));
-    selected = (current().blocks[index] ?? current().blocks[index - 1])?.id;
+    const origin = locate(current().blocks, selected);
+    if (!origin) return;
+    const { items, index, parent } = origin;
+    commit(() => items.splice(index, 1));
+    selected = (items[index] ?? items[index - 1] ?? parent)?.id;
     draw();
     (outline.querySelector<HTMLElement>('[aria-current]') ?? buttons.querySelector('button'))?.focus();
     notify('Element removed.');
@@ -309,6 +357,7 @@ const actions: Record<string, (button: HTMLButtonElement) => void> = {
   phone: () => width(true),
   fit: () => width(false),
   top: canvas.scrollTop,
+  'motion-start': () => { if (selected) canvas.motionStart(selected); },
   play: () => setPlaying(!playing),
   copy: () => {
     if (!navigator.clipboard) return selectPrompt();
@@ -323,10 +372,10 @@ function selectPrompt() {
 }
 
 function step(direction: -1 | 1) {
-  const blocks = current().blocks;
-  const index = blocks.findIndex(item => item.id === selected);
-  if (index < 0 || !blocks[index + direction]) return;
-  move(blocks[index].id, blocks[index + direction].id, direction === 1);
+  const origin = locate(current().blocks, selected);
+  const neighbour = origin?.items[origin.index + direction];
+  if (!origin || !neighbour || !selected) return;
+  move(selected, { target: neighbour.id, position: direction === 1 ? 'after' : 'before' });
   const button = properties.querySelector<HTMLElement>(`[data-action="${direction === -1 ? 'up' : 'down'}"]:not(:disabled)`);
   (button ?? outline.querySelector<HTMLElement>('[aria-current]'))?.focus({ preventScroll: true });
 }
@@ -362,7 +411,7 @@ const reduced = matchMedia('(prefers-reduced-motion: reduce)');
 function showMotionStatus() {
   const supported = CSS.supports('animation-timeline: view()') && CSS.supports('animation-range: entry 0% entry 100%');
   get('#motion-status').textContent = reduced.matches || document.documentElement.dataset.motion === 'reduce'
-    ? 'Showing static regions · reduced motion' : !supported ? 'Showing static regions · scroll timelines unavailable'
+    ? 'Showing static regions · reduced motion' : staticMotion ? 'Showing static regions · preview setting' : !supported ? 'Showing static regions · scroll timelines unavailable'
       : displayMode() === 'inspect' ? 'Showing static regions · Inspect mode' : 'Scroll inside the canvas to test motion';
 }
 document.documentElement.addEventListener('blueprint-display-mode', event => {
@@ -373,6 +422,7 @@ document.documentElement.addEventListener('blueprint-display-mode', event => {
 });
 reduced.addEventListener('change', showMotionStatus);
 
+scrubber.addEventListener('input', () => canvas.scrub(scrubber.valueAsNumber));
 mountIcons(document);
 draw();
 renderWorkflow(true);

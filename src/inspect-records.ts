@@ -26,6 +26,25 @@ type RecordEntry = {
 const mdn = 'https://developer.mozilla.org/en-US/docs';
 
 export const records = {
+  creatorGroup: {
+    name: 'Responsive layout group', element: '<section>', tier: 'Progressive enhancement',
+    primitives: ['CSS Grid', 'Container queries', 'minmax()'],
+    why: 'Compose several regions as a unit. A responsive row keeps the same reading order when it stacks.',
+    fallback: 'Group children remain stacked when the canvas is narrow or container queries are unavailable.',
+    source: { language: 'CSS', code: '@container layout-group (min-width: 30rem) { .group[data-arrangement="row"] { grid-template-columns: repeat(2, minmax(0, 1fr)); } }', url: creatorStyles, filename: 'page.css' },
+    docs: [{ label: 'CSS container queries', url: `${mdn}/Web/CSS/Guides/Containment/Container_queries` }],
+  },
+  creatorMotion: {
+    name: 'Scroll-driven motion', element: '<section>', tier: 'Progressive enhancement',
+    primitives: ['animation-timeline: view()', 'animation-range', 'prefers-reduced-motion'],
+    why: 'Use the region’s movement through the canvas to advance the effect. Scrub the canvas to compare different offsets.',
+    fallback: 'Regions stay at full opacity in their final position when timelines are unavailable or reduced motion is active.',
+    source: { language: 'CSS', code: '.region { animation-timeline: view(); animation-range: entry 0% entry 100%; }', url: creatorStyles, filename: 'page.css' },
+    docs: [
+      { label: 'Animation timeline', url: `${mdn}/Web/CSS/Reference/Properties/animation-timeline` },
+      { label: 'Animation range', url: `${mdn}/Web/CSS/Reference/Properties/animation-range` },
+    ],
+  },
   creatorHero: {
     name: 'Responsive split section', element: '<section>', tier: 'Baseline',
     primitives: ['CSS Grid', 'Container queries', 'minmax()'],

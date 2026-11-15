@@ -1,4 +1,5 @@
 export const patterns = {
+  group: { label: 'Layout group', icon: 'layout', description: 'Gather elements into a stack or a responsive row.' },
   nav: { label: 'Navigation', icon: 'layout', description: 'A navigation landmark and links to regions.' },
   split: { label: 'Split section', icon: 'hero', description: 'Two regions that stack at narrow widths.' },
   grid: { label: 'Card grid', icon: 'grid', description: 'Repeated regions in a responsive grid.' },
@@ -16,12 +17,23 @@ export const presets = {
 } as const;
 
 export const effects = { none: 'None', reveal: 'Rise into view', fade: 'Fade into view', scale: 'Scale into view' } as const;
+export const ranges = { entry: 'As it enters', late: 'Late entrance', across: 'While it crosses the canvas' } as const;
+export const intensities = { soft: 'Subtle', regular: 'Regular', strong: 'Strong' } as const;
+export const arrangements = { stack: 'Stack', row: 'Responsive row' } as const;
 export const spacings = { tight: 'Compact', regular: 'Regular', airy: 'Spacious' } as const;
 export type Pattern = keyof typeof patterns;
 export type Effect = keyof typeof effects;
 export type Spacing = keyof typeof spacings;
 export type Preset = keyof typeof presets;
-export type Block = { id: string; kind: Pattern; effect: Effect; spacing: Spacing; columns: 2 | 3 | 4 };
+export type Block = {
+  id: string; kind: Pattern; effect: Effect; spacing: Spacing; columns: 2 | 3 | 4;
+  children?: Block[];
+  arrangement?: keyof typeof arrangements;
+  range?: keyof typeof ranges;
+  intensity?: keyof typeof intensities;
+};
+export type Placement = { target?: string; position: 'before' | 'after' | 'inside' };
+
 export type Sheet = {
   id: string;
   name: string;
@@ -40,7 +52,48 @@ export function id() {
 }
 
 export function block(kind: Pattern): Block {
-  return { id: id(), kind, effect: 'none', spacing: 'regular', columns: 3 };
+  return { id: id(), kind, effect: 'none', spacing: 'regular', columns: 3, ...(kind === 'group' ? { children: [] } : {}) };
+}
+
+export function allBlocks(blocks: Block[]): Block[] {
+  return blocks.flatMap(item => [item, ...allBlocks(item.children ?? [])]);
+}
+
+export function locate(blocks: Block[], target?: string, parent?: Block): { items: Block[]; index: number; parent?: Block } | undefined {
+  for (const [index, item] of blocks.entries()) {
+    if (item.id === target) return { items: blocks, index, parent };
+    const found = item.children && locate(item.children, target, item);
+    if (found) return found;
+  }
+}
+
+export function insertion(blocks: Block[], placement: Placement) {
+  if (!placement.target) return { items: blocks, index: blocks.length };
+  const found = locate(blocks, placement.target);
+  if (!found) return;
+  if (placement.position === 'inside') {
+    const items = found.items[found.index].children;
+    if (items) return { items, index: items.length };
+    return;
+  }
+  return { items: found.items, index: found.index + Number(placement.position === 'after') };
+}
+
+export function copyBlock(item: Block): Block {
+  return { ...item, id: id(), ...(item.children ? { children: item.children.map(copyBlock) } : {}) };
+}
+
+function validBlocks(input: Block[], validId: (value: unknown) => boolean, seen = new Set<string>()): boolean {
+  return Array.isArray(input) && input.every(item => {
+    if (!item || !validId(item.id) || seen.has(item.id) || seen.size >= maximum
+      || !Object.hasOwn(patterns, item.kind) || !Object.hasOwn(effects, item.effect)
+      || !Object.hasOwn(spacings, item.spacing) || ![2, 3, 4].includes(item.columns)
+      || (item.arrangement !== undefined && !Object.hasOwn(arrangements, item.arrangement))
+      || (item.range !== undefined && !Object.hasOwn(ranges, item.range))
+      || (item.intensity !== undefined && !Object.hasOwn(intensities, item.intensity))) return false;
+    seen.add(item.id);
+    return item.kind === 'group' ? validBlocks(item.children!, validId, seen) : item.children === undefined;
+  });
 }
 
 export function sheet(name: string, preset: Preset): Sheet {
@@ -53,8 +106,7 @@ export function loadProject(): Project {
     const validId = (value: unknown) => typeof value === 'string' && /^[a-z0-9-]+$/.test(value);
     if (saved?.sheets.length && saved.sheets.length <= maximum && saved.sheets.some(item => item.id === saved.active)
       && saved.sheets.every(item => validId(item.id) && typeof item.name === 'string' && typeof item.philosophy === 'string'
-        && item.blocks.length <= maximum && item.blocks.every(b => validId(b.id) && Object.hasOwn(patterns, b.kind)
-          && Object.hasOwn(effects, b.effect) && Object.hasOwn(spacings, b.spacing) && [2, 3, 4].includes(b.columns)))) return saved;
+        && validBlocks(item.blocks, validId))) return saved;
   } catch { /* The starter canvas is available without storage. */ }
   const starter = sheet('Landing layout', 'landing');
   starter.philosophy = 'Lead with one clear region. Keep supporting detail collapsible and preserve reading order at narrow widths.';
@@ -74,11 +126,17 @@ export function saveProject(project: Project) {
 export const limit = maximum;
 
 export function buildPrompt(source: Sheet, target: string, relation: 'sibling' | 'next', handoff: string) {
-  const outline = source.blocks.map(item => {
-    const columns = item.kind === 'grid' ? `, up to ${item.columns} columns` : '';
-    const motion = item.effect === 'none' ? '' : `, ${effects[item.effect].toLowerCase()} on scroll`;
-    return `- ${patterns[item.kind].label} (${spacings[item.spacing].toLowerCase()} spacing${columns}${motion})`;
-  });
+  function describe(blocks: Block[], indent = ''): string[] {
+    return blocks.flatMap(item => {
+      const arrangement = item.kind === 'grid' ? `, up to ${item.columns} columns`
+        : item.kind === 'group' ? `, ${arrangements[item.arrangement ?? 'stack'].toLowerCase()}` : '';
+      const motion = item.effect === 'none' ? '' :
+        `, ${intensities[item.intensity ?? 'regular'].toLowerCase()} ${effects[item.effect].toLowerCase()}, ${ranges[item.range ?? 'entry'].toLowerCase()}`;
+      return [`${indent}- ${patterns[item.kind].label} (${spacings[item.spacing].toLowerCase()} spacing${arrangement}${motion})`,
+        ...describe(item.children ?? [], indent + '  ')];
+    });
+  }
+  const outline = describe(source.blocks);
   return [
     `# Layout brief · ${target.trim() || 'Next layout'}`,
     relation === 'next' ? `Design the step after ${source.name}.\n\nArrival and next task: ${handoff.trim() || 'Describe what the visitor has just done and what comes next.'}`

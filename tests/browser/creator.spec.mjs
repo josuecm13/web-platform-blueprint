@@ -122,3 +122,63 @@ test('a Library specimen starts a focused layout study', async ({ page }) => {
   await expect(blocks(page)).toHaveCount(1);
   expect(await kinds(page)).toEqual(['grid']);
 });
+
+test('drop elements into a group, compose a responsive row, and move an element back to the canvas', async ({ page }) => {
+  await page.setViewportSize({ width: 1560, height: 1000 });
+  await open(page);
+  await palette(page).getByRole('button', { name: 'Layout group' }).click();
+  const group = canvas(page).locator('[data-kind="group"]');
+  const children = group.locator('.group > [data-block]');
+  const from = await palette(page).getByRole('button', { name: 'Media slot' }).boundingBox();
+  const to = await group.getByText('Drop into group', { exact: true }).boundingBox();
+  await page.mouse.move(from.x + 12, from.y + 10);
+  await page.mouse.down();
+  await page.mouse.move(to.x + to.width / 2, to.y + to.height / 2, { steps: 15 });
+  await page.mouse.up();
+  await expect(children).toHaveCount(1);
+  await structure(page).getByRole('button', { name: 'Layout group', exact: true }).click();
+  await palette(page).getByRole('button', { name: 'Text stack' }).click();
+  await expect(children).toHaveCount(2);
+
+  await structure(page).getByRole('button', { name: 'Layout group', exact: true }).click();
+  await structure(page).getByRole('combobox', { name: 'Arrangement' }).selectOption('row');
+  const tracks = () => group.locator('.group').evaluate(element => getComputedStyle(element).gridTemplateColumns.split(' ').length);
+  await expect.poll(tracks).toBe(2);
+  await page.getByRole('button', { name: 'Phone width' }).click();
+  await expect.poll(tracks).toBe(1);
+
+  await structure(page).getByRole('button', { name: 'Text stack', exact: true }).click();
+  await structure(page).getByRole('combobox', { name: 'Container' }).selectOption('root');
+  await expect(children).toHaveCount(1);
+  await page.getByRole('button', { name: 'Undo' }).click();
+  await expect(children).toHaveCount(2);
+  await page.reload();
+  await expect(children).toHaveCount(2);
+  await page.getByRole('tab', { name: 'Workflow' }).click();
+  await expect(page.getByRole('textbox', { name: 'Reusable UX prompt' })).toHaveValue(/Layout group .*responsive row.*\n  - Media slot.*\n  - Text stack/);
+});
+
+test('tune a scroll effect and scrub the canvas, then compare the static view', async ({ page }) => {
+  await open(page);
+  await page.getByRole('button', { name: 'Phone width' }).click();
+  await structure(page).getByRole('button', { name: 'Card grid' }).click();
+  await structure(page).getByRole('combobox', { name: 'Scroll range' }).selectOption('late');
+  await structure(page).getByRole('combobox', { name: 'Intensity' }).selectOption('strong');
+  const effect = canvas(page).locator('[data-kind="grid"] > .region');
+  await expect(effect).toHaveCSS('animation-range-start', 'entry 45%');
+  await expect(effect).toHaveCSS('--rise', '3.5rem');
+  const slider = page.getByRole('slider', { name: /Canvas scroll/ });
+  await slider.press('Home');
+  await expect.poll(() => canvas(page).evaluate(el => el.scrollTop)).toBe(0);
+  await slider.press('End');
+  await expect.poll(() => canvas(page).evaluate(el => el.scrollTop)).toBeGreaterThan(0);
+
+  await page.getByRole('button', { name: 'Static preview' }).click();
+  await expect(effect).toHaveCSS('animation-name', 'none');
+  await expect(effect).toHaveCSS('opacity', '1');
+  await page.getByRole('button', { name: 'Static preview' }).click();
+  await expect(effect).toHaveCSS('animation-name', 'reveal');
+  await page.reload();
+  await expect(effect).toHaveCSS('animation-range-start', 'entry 45%');
+  await expect(effect).toHaveCSS('--rise', '3.5rem');
+});
