@@ -20,7 +20,7 @@ The app will be a real multipage experience rather than a single demo canvas:
 - **Component detail** — isolated component behavior, fallbacks, and implementation notes.
 - **Playground** — a small native Canvas experiment using pointer input and animation frames.
 - **Preferences** — motion, contrast, density, and other user-facing settings.
-- **Create** — compose pages from Blueprint patterns, capture reusable UX decisions, and export one page or a linked site.
+- **Create** — arrange and test responsive wireframes from Blueprint patterns.
 
 ## Inspectable by design
 
@@ -84,13 +84,11 @@ This expands the Playground scope of [issue #5](https://github.com/josuecm13/web
 
 Workspace offers **Empty**, **Typical**, and **Crowded** datasets. Search or sort the activity table, change the project density in Preferences, and use Inspect to see how the overview grid and scrollable table handle the available space.
 
-## Creator Studio
+## Layout Studio
 
-Open **Create** from the main navigation. Edit the example in place, start from a brief or an empty outline, or choose **Use in Creator** on a supported Library specimen. Pick a goal to get a suggested section order and a reason for each choice. Edit in Properties or on the canvas, switch the live preview to phone width, and use Inspect to read the actual primitives, fallback, and live grid measurements.
+Open **Create** to arrange browser-native patterns on an interactive wireframe. Drag elements from the palette, move an existing element with its canvas handle, or use the add and move buttons. Switch to phone width to see grids reflow. Test scroll-driven rise, fade, and scale effects with a static fallback for unsupported browsers and reduced motion.
 
-In **Workflow**, capture the desired experience, tone, palette, action convention, and the decisions that a later page should inherit. Choose a sibling or complementary page to generate a self-contained Markdown build prompt. Blueprint uses the selected goal, tone, palette, and action convention to create an editable related draft. Freeform UX decisions travel in the prompt. **Try a sample handoff** on the Forma example creates a ready-to-edit quickstart brief.
-
-Drafts save locally. **Export** downloads standalone HTML, a ZIP of linked pages, or an editable JSON backup. Extract the ZIP into one folder and open `start-here.html`. The downloaded HTML embeds its styles and assets and preserves its navigation and native disclosures without JavaScript. To restore a backup, use **Import backup** in the project page menu.
+In **Workflow**, describe the UX philosophy and generate a reusable prompt for a sibling layout or the next step. Next-step layouts can be tested from the source action in the canvas. Layouts save locally.
 
 ## Run locally
 

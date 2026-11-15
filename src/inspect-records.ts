@@ -27,88 +27,52 @@ const mdn = 'https://developer.mozilla.org/en-US/docs';
 
 export const records = {
   creatorHero: {
-    name: 'Responsive hero',
-    element: '<section>',
-    tier: 'Progressive enhancement',
-    primitives: ['<h1>', 'CSS Grid', '@media', ':has()'],
-    why: 'Lead with the value proposition and let the artwork sit alongside it when the page has enough space.',
-    fallback: 'Without the matching layout rules, the copy and artwork stack in document order.',
-    source: {
-      language: 'CSS',
-      code: `@media (min-width: 36rem) {
-  .page-hero .page-inner:has(.page-art) {
-    grid-template-columns: minmax(0, 1.02fr) minmax(0, 1fr);
-  }
-}`,
-      url: creatorStyles,
-      filename: 'page.css',
-    },
-    docs: [
-      { label: 'CSS Grid layout', url: `${mdn}/Web/CSS/Guides/Grid_layout` },
-      { label: ':has()', url: `${mdn}/Web/CSS/Reference/Selectors/:has` },
-    ],
-  },
-  creatorGrid: {
-    name: 'Responsive benefits grid',
-    element: '<ul>',
-    tier: 'Baseline',
-    primitives: ['<ul>', 'CSS Grid', 'auto-fit', 'minmax()'],
-    why: 'Present comparable points as a list and let columns reflow to fit the space available.',
-    fallback: 'The benefits read in list order when grid styles are unavailable.',
-    source: {
-      language: 'CSS',
-      code: `.page-benefits .page-entries {
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));
-}`,
-      url: creatorStyles,
-      filename: 'page.css',
-    },
+    name: 'Responsive split section', element: '<section>', tier: 'Baseline',
+    primitives: ['CSS Grid', 'Container queries', 'minmax()'],
+    why: 'Compare paired regions without changing their reading order.',
+    fallback: 'The regions remain stacked in document order at narrow widths or without CSS Grid.',
+    source: { language: 'CSS', code: '@container layout-canvas (min-width: 38rem) { .split { grid-template-columns: repeat(2, minmax(0, 1fr)); } }', url: creatorStyles, filename: 'page.css' },
     docs: [{ label: 'CSS Grid layout', url: `${mdn}/Web/CSS/Guides/Grid_layout` }],
   },
+  creatorGrid: {
+    name: 'Responsive card grid', element: '<ul>', tier: 'Baseline',
+    primitives: ['CSS Grid', 'Container queries', 'Custom properties'],
+    why: 'Try one, two, or several columns while preserving list order.',
+    fallback: 'Cards stay in list order without CSS Grid.',
+    source: { language: 'CSS', code: '.tiles { grid-template-columns: repeat(var(--columns), minmax(0, 1fr)); }', url: creatorStyles, filename: 'page.css' },
+    docs: [{ label: 'CSS Grid layout', url: `${mdn}/Web/CSS/Guides/Grid_layout` }],
+  },
+  creatorNav: {
+    name: 'Prototype navigation', element: '<nav>', tier: 'Baseline',
+    primitives: ['<nav>', '<a href>', 'Fragment navigation'],
+    why: 'Test the order in which a user can reach page regions.',
+    fallback: 'Plain fragment links work without layout styles.',
+    source: { language: 'HTML', code: '<nav aria-label="Prototype navigation"><a href="#region">Region</a></nav>', url: creatorRenderer, filename: 'render-page.ts' },
+    docs: [{ label: 'HTML nav element', url: `${mdn}/Web/HTML/Reference/Elements/nav` }],
+  },
   creatorAction: {
-    name: 'Primary action',
-    element: '<a>',
-    tier: 'Baseline',
-    primitives: ['<a href>', 'fragment navigation', ':focus-visible'],
-    why: 'A link gives the visitor a next step using ordinary browser navigation.',
-    fallback: 'The link works with CSS and JavaScript disabled. If the draft lacks a destination, export omits the incomplete action.',
-    source: {
-      language: 'HTML',
-      code: '<a class="page-action" href="#steps">See the steps</a>',
-      url: creatorRenderer,
-      filename: 'render-page.ts',
-    },
-    docs: [{ label: 'HTML anchor element', url: `${mdn}/Web/HTML/Reference/Elements/a` }],
+    name: 'Journey action', element: '<button>', tier: 'Progressive enhancement',
+    primitives: ['<button>', 'click event', 'Visible focus'],
+    why: 'Test a deliberate transition into a linked layout.',
+    fallback: 'An unlinked action is shown as a placeholder at the intended position.',
+    source: { language: 'HTML', code: '<button type="button" data-follow>Continue to next layout</button>', url: creatorRenderer, filename: 'render-page.ts' },
+    docs: [{ label: 'HTML button element', url: `${mdn}/Web/HTML/Reference/Elements/button` }],
   },
   creatorText: {
-    name: 'Editorial text',
-    element: '<section>',
-    tier: 'Baseline',
-    primitives: ['<section>', 'aria-labelledby', 'max-inline-size'],
-    why: 'A named section gives the explanation a place in the page outline. The line length is bounded for reading.',
-    fallback: 'Without CSS, the heading and paragraph remain in document order.',
-    source: {
-      language: 'HTML',
-      code: '<section aria-labelledby="text-heading">\n  <h2 id="text-heading">About this idea</h2>\n  <p>Give readers the context they need.</p>\n</section>',
-      url: creatorRenderer,
-      filename: 'render-page.ts',
-    },
-    docs: [{ label: 'HTML section element', url: `${mdn}/Web/HTML/Reference/Elements/section` }],
+    name: 'Text hierarchy', element: '<section>', tier: 'Baseline',
+    primitives: ['<section>', 'max-inline-size', 'Block flow'],
+    why: 'Compare line length and vertical rhythm with abstract placeholders.',
+    fallback: 'Regions follow document order without styles.',
+    source: { language: 'CSS', code: '.reading { max-inline-size: 40rem; margin-inline: auto; }', url: creatorStyles, filename: 'page.css' },
+    docs: [{ label: 'max-inline-size', url: `${mdn}/Web/CSS/Reference/Properties/max-inline-size` }],
   },
-  creatorSteps: {
-    name: 'Ordered steps',
-    element: '<ol>',
-    tier: 'Baseline',
-    primitives: ['<ol>', '<li>', 'CSS Grid'],
-    why: 'List order is part of the content, so each step is announced and read in the sequence the visitor needs.',
-    fallback: 'Without CSS, a numbered list still conveys the order.',
-    source: {
-      language: 'HTML',
-      code: '<ol class="page-entries">\n  <li><h3>Prepare</h3><p>Collect what you need.</p></li>\n  <li><h3>Begin</h3><p>Take the first step.</p></li>\n</ol>',
-      url: creatorRenderer,
-      filename: 'render-page.ts',
-    },
-    docs: [{ label: 'HTML ordered list', url: `${mdn}/Web/HTML/Reference/Elements/ol` }],
+  creatorMedia: {
+    name: 'Media slot', element: '<div>', tier: 'Baseline',
+    primitives: ['aspect-ratio', 'Border box'],
+    why: 'Reserve a rectangle of predictable proportions while testing page rhythm.',
+    fallback: 'Adjacent regions remain in order if the placeholder has no inherent height.',
+    source: { language: 'CSS', code: '.media { aspect-ratio: 2.15; min-width: 0; }', url: creatorStyles, filename: 'page.css' },
+    docs: [{ label: 'aspect-ratio', url: `${mdn}/Web/CSS/Reference/Properties/aspect-ratio` }],
   },
 
   card: {
