@@ -20,3 +20,30 @@
  .library-specimen-actions { display: flex; align-items: baseline; flex-wrap: wrap; gap: .45rem .8rem; margin-block-start: auto; }
  .library-specimen-actions a[href*="create/"] { color: #24564b; font-weight: 650; }
 }
+
+@layer base {
+  :root {
+    --field-paper: #f8faf7;
+    --field-ink: #192e2b;
+    --field-muted: #45665e;
+    --field-line: #c8d8d0;
+    --field-tint: #e9f2ed;
+  }
+}
+
+@layer components {
+  .field-intro {
+    min-inline-size: 0;
+    padding: clamp(1.25rem, 4vw, 3.5rem);
+    border-radius: 1rem;
+    background:
+      repeating-linear-gradient(90deg, #9be3d11a 0 1px, transparent 1px 28px),
+      repeating-linear-gradient(#9be3d11a 0 1px, transparent 1px 28px),
+      linear-gradient(120deg, #172d2a, #28524a);
+    color: #f0f9f4;
+  }
+
+  .field-intro h1 { margin-block-end: .65rem; font-size: clamp(2.1rem, 7vw, 5.5rem); }
+  .field-intro em { color: #a9f0db; font-family: Georgia, serif; font-weight: 400; }
+  .field-intro p { max-inline-size: 37ch; color: #d2e7df; }
+}

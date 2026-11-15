@@ -8,7 +8,7 @@
 
 **How far can a polished, accessible web application go without a component library or animation library?**
 
-The project answers that question with a wireframe / technical-blueprint visual language: white space, graphite, restrained greys, construction lines, semantic labels, and live interactive specimens.
+The project answers that question with a wireframe / technical-blueprint visual language: white space, graphite, restrained greys, construction lines, semantic labels, and live interactive specimens. See the [design language](docs/design-language.md) for examples and guidance.
 
 ## Product shape
 
