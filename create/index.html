@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Arrange browser-native patterns and test responsive UX with an interactive wireframe.">
+  <title>Layout Studio — Web Platform Blueprint</title>
+  <link rel="stylesheet" href="../src/style.css">
+  <link rel="stylesheet" href="../src/creator/studio.css">
+  <script type="module" blocking="render" src="../src/creator/studio.ts"></script>
+</head>
+<body class="creator-page">
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="site-header">
+    <a class="brand" href="../"><span class="brand-mark">✳</span><span>WEB PLATFORM<br><b>BLUEPRINT</b></span></a>
+    <nav aria-label="Main navigation">
+      <a href="../">Home</a><a href="../library/">Library</a><a href="../workspace/">Workspace</a>
+      <a href="../components/">Components</a><a href="../playground/">Playground</a><a href="../preferences/">Preferences</a>
+      <a href="./" aria-current="page">Create</a>
+    </nav>
+    <span class="header-meta">FIELD GUIDE / 2026</span>
+  </header>
+  <main id="main" class="studio-shell">
+    <header class="studio-intro field-intro">
+      <div><h1>Layout <em>Studio.</em></h1><p>Arrange elements, test scroll motion, and connect layouts into a user journey.</p></div>
+      <button type="button" class="primary" data-action="new" data-icon="plus" hidden>New layout</button>
+    </header>
+    <noscript><p>The interactive canvas needs JavaScript. Explore the <a href="../library/">Library</a> for live HTML and CSS patterns.</p></noscript>
+    <div id="studio" hidden>
+      <div class="studio-bar">
+        <label class="sheet-control">Layout <select id="sheet-picker" aria-label="Current layout"></select></label>
+        <div class="studio-segments" role="tablist" aria-label="Layout workspace">
+          <button type="button" id="tab-canvas" role="tab" aria-selected="true" aria-controls="compose" data-action="compose" data-icon="layout">Canvas</button>
+          <button type="button" id="tab-workflow" role="tab" aria-selected="false" aria-controls="workflow" data-action="workflow" data-icon="branch" tabindex="-1">Workflow</button>
+        </div>
+        <div class="studio-segments history" role="group" aria-label="History">
+          <button type="button" data-action="undo" data-icon="undo" aria-label="Undo"></button>
+          <button type="button" data-action="redo" data-icon="redo" aria-label="Redo"></button>
+        </div>
+      </div>
+      <div class="compose" id="compose" role="tabpanel" aria-labelledby="tab-canvas">
+        <aside class="palette" aria-labelledby="palette-title">
+          <header class="panel-head"><h2 id="palette-title">Elements</h2></header>
+          <p class="hint">Drag onto the canvas or select to add.</p>
+          <div id="palette-items"></div>
+        </aside>
+        <section class="preview" aria-labelledby="canvas-title">
+          <header class="panel-head">
+            <h2 id="canvas-title">Live canvas</h2>
+            <div class="preview-tools">
+              <div data-display-modes></div>
+              <div class="studio-segments" role="group" aria-label="Canvas width">
+                <button type="button" data-action="fit" aria-pressed="true" data-icon="desktop" aria-label="Fit canvas"></button>
+                <button type="button" data-action="phone" aria-pressed="false" data-icon="phone" aria-label="Phone width"></button>
+              </div>
+            </div>
+          </header>
+          <div class="stage" id="stage">
+            <div class="device">
+              <div class="device-bar"><span id="device-name"></span><span id="device-width"></span></div>
+              <div id="canvas" role="region" aria-label="Interactive layout canvas" tabindex="0"></div>
+            </div>
+          </div>
+          <footer class="canvas-tools">
+            <span id="motion-status"></span><label class="scrubber">Canvas scroll <input id="scrubber" type="range" min="0" max="100" value="0"><output id="scroll-position" for="scrubber">0%</output></label><button type="button" data-action="static-motion" aria-pressed="false">Static preview</button><button type="button" data-action="play" aria-pressed="false">Play prototype</button><button type="button" data-action="top">Back to top ↑</button>
+          </footer>
+        </section>
+        <aside class="inspector" aria-labelledby="structure-title">
+          <header class="panel-head"><h2 id="structure-title">Structure</h2><span id="block-count"></span></header>
+          <ol id="outline" aria-label="Layout elements"></ol>
+          <div id="properties"></div>
+        </aside>
+      </div>
+      <div class="workflow" id="workflow" role="tabpanel" aria-labelledby="tab-workflow" hidden>
+        <header class="workflow-header"><h2>Design the next step</h2><p id="journey"></p></header>
+        <div class="workflow-grid">
+          <form id="related" class="workflow-card">
+            <label>UX philosophy<textarea id="philosophy" rows="4" maxlength="1800" placeholder="Describe the hierarchy, spacing, and interaction decisions to carry forward."></textarea></label>
+            <label>Relationship<select name="relation"><option value="sibling">Same philosophy</option><option value="next">Next step in the journey</option></select></label>
+            <label>Layout name<input name="name" maxlength="90" placeholder="e.g. Step 2" required></label>
+            <label id="handoff-label">Experience to design<textarea name="handoff" rows="3" maxlength="1200" placeholder="What does the visitor need to do?"></textarea></label>
+            <label class="check"><input type="checkbox" name="inherit" checked> Start from the source arrangement</label>
+            <button type="submit" class="primary" data-icon="branch">Create related layout</button>
+          </form>
+          <section class="workflow-card prompt-panel" aria-labelledby="prompt-title">
+            <h3 id="prompt-title">Reusable UX prompt</h3>
+            <textarea id="prompt" aria-label="Reusable UX prompt" rows="17" readonly spellcheck="false"></textarea>
+            <button type="button" data-action="copy" data-icon="copy">Copy prompt</button>
+          </section>
+        </div>
+      </div>
+      <div class="studio-status"><span id="save-status">Saved on this device</span><span role="status" id="feedback"></span></div>
+    </div>
+    <dialog id="new-dialog" aria-labelledby="new-title">
+      <form id="new-layout">
+        <h2 id="new-title">New layout</h2>
+        <label>Layout name<input name="name" maxlength="90" placeholder="e.g. Product detail" required></label>
+        <label>Starting arrangement<select name="preset" id="preset-picker"></select></label>
+        <div class="studio-segments"><button type="button" data-action="cancel">Cancel</button><button class="primary" type="submit">Open canvas</button></div>
+      </form>
+    </dialog>
+  </main>
+</body>
+</html>

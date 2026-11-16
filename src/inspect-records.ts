@@ -6,6 +6,9 @@ import layoutSource from './style.css?url&no-inline';
 import specimenStyles from './specimens.css?url&no-inline';
 import workspaceStyles from './workspace.css?url&no-inline';
 
+import creatorStyles from './creator/page.css?url&no-inline';
+import creatorRenderer from './creator/render-page.ts?url&no-inline';
+
 type Reference = { label: string; url: string };
 type Tier = 'Baseline' | 'Progressive enhancement';
 
@@ -23,6 +26,74 @@ type RecordEntry = {
 const mdn = 'https://developer.mozilla.org/en-US/docs';
 
 export const records = {
+  creatorGroup: {
+    name: 'Responsive layout group', element: '<section>', tier: 'Progressive enhancement',
+    primitives: ['CSS Grid', 'Container queries', 'minmax()'],
+    why: 'Compose several regions as a unit. A responsive row keeps the same reading order when it stacks.',
+    fallback: 'Group children remain stacked when the canvas is narrow or container queries are unavailable.',
+    source: { language: 'CSS', code: '@container layout-group (min-width: 30rem) { .group[data-arrangement="row"] { grid-template-columns: repeat(2, minmax(0, 1fr)); } }', url: creatorStyles, filename: 'page.css' },
+    docs: [{ label: 'CSS container queries', url: `${mdn}/Web/CSS/Guides/Containment/Container_queries` }],
+  },
+  creatorMotion: {
+    name: 'Scroll-driven motion', element: '<section>', tier: 'Progressive enhancement',
+    primitives: ['animation-timeline: view()', 'animation-range', 'prefers-reduced-motion'],
+    why: 'Use the region’s movement through the canvas to advance the effect. Scrub the canvas to compare different offsets.',
+    fallback: 'Regions stay at full opacity in their final position when timelines are unavailable or reduced motion is active.',
+    source: { language: 'CSS', code: '.region { animation-timeline: view(); animation-range: entry 0% entry 100%; }', url: creatorStyles, filename: 'page.css' },
+    docs: [
+      { label: 'Animation timeline', url: `${mdn}/Web/CSS/Reference/Properties/animation-timeline` },
+      { label: 'Animation range', url: `${mdn}/Web/CSS/Reference/Properties/animation-range` },
+    ],
+  },
+  creatorHero: {
+    name: 'Responsive split section', element: '<section>', tier: 'Baseline',
+    primitives: ['CSS Grid', 'Container queries', 'minmax()'],
+    why: 'Compare paired regions without changing their reading order.',
+    fallback: 'The regions remain stacked in document order at narrow widths or without CSS Grid.',
+    source: { language: 'CSS', code: '@container layout-canvas (min-width: 38rem) { .split { grid-template-columns: repeat(2, minmax(0, 1fr)); } }', url: creatorStyles, filename: 'page.css' },
+    docs: [{ label: 'CSS Grid layout', url: `${mdn}/Web/CSS/Guides/Grid_layout` }],
+  },
+  creatorGrid: {
+    name: 'Responsive card grid', element: '<ul>', tier: 'Baseline',
+    primitives: ['CSS Grid', 'Container queries', 'Custom properties'],
+    why: 'Try one, two, or several columns while preserving list order.',
+    fallback: 'Cards stay in list order without CSS Grid.',
+    source: { language: 'CSS', code: '.tiles { grid-template-columns: repeat(var(--columns), minmax(0, 1fr)); }', url: creatorStyles, filename: 'page.css' },
+    docs: [{ label: 'CSS Grid layout', url: `${mdn}/Web/CSS/Guides/Grid_layout` }],
+  },
+  creatorNav: {
+    name: 'Prototype navigation', element: '<nav>', tier: 'Baseline',
+    primitives: ['<nav>', '<a href>', 'Fragment navigation'],
+    why: 'Test the order in which a user can reach page regions.',
+    fallback: 'Plain fragment links work without layout styles.',
+    source: { language: 'HTML', code: '<nav aria-label="Prototype navigation"><a href="#region">Region</a></nav>', url: creatorRenderer, filename: 'render-page.ts' },
+    docs: [{ label: 'HTML nav element', url: `${mdn}/Web/HTML/Reference/Elements/nav` }],
+  },
+  creatorAction: {
+    name: 'Journey action', element: '<button>', tier: 'Progressive enhancement',
+    primitives: ['<button>', 'click event', 'Visible focus'],
+    why: 'Test a deliberate transition into a linked layout.',
+    fallback: 'An unlinked action is shown as a placeholder at the intended position.',
+    source: { language: 'HTML', code: '<button type="button" data-follow>Continue to next layout</button>', url: creatorRenderer, filename: 'render-page.ts' },
+    docs: [{ label: 'HTML button element', url: `${mdn}/Web/HTML/Reference/Elements/button` }],
+  },
+  creatorText: {
+    name: 'Text hierarchy', element: '<section>', tier: 'Baseline',
+    primitives: ['<section>', 'max-inline-size', 'Block flow'],
+    why: 'Compare line length and vertical rhythm with abstract placeholders.',
+    fallback: 'Regions follow document order without styles.',
+    source: { language: 'CSS', code: '.reading { max-inline-size: 40rem; margin-inline: auto; }', url: creatorStyles, filename: 'page.css' },
+    docs: [{ label: 'max-inline-size', url: `${mdn}/Web/CSS/Reference/Properties/max-inline-size` }],
+  },
+  creatorMedia: {
+    name: 'Media slot', element: '<div>', tier: 'Baseline',
+    primitives: ['aspect-ratio', 'Border box'],
+    why: 'Reserve a rectangle of predictable proportions while testing page rhythm.',
+    fallback: 'Adjacent regions remain in order if the placeholder has no inherent height.',
+    source: { language: 'CSS', code: '.media { aspect-ratio: 2.15; min-width: 0; }', url: creatorStyles, filename: 'page.css' },
+    docs: [{ label: 'aspect-ratio', url: `${mdn}/Web/CSS/Reference/Properties/aspect-ratio` }],
+  },
+
   card: {
     name: 'Responsive card',
     element: '<article>',

@@ -1,26 +1,11 @@
 @layer workspace {
   .workspace-page {
-    --workspace-paper: #f8faf7;
-    --workspace-ink: #192e2b;
-    --workspace-muted: #45665e;
-    --workspace-line: #c8d8d0;
+    --workspace-paper: var(--field-paper);
+    --workspace-ink: var(--field-ink);
+    --workspace-muted: var(--field-muted);
+    --workspace-line: var(--field-line);
     padding: clamp(.75rem, 3vw, 3rem) clamp(.75rem, 5vw, 5rem);
   }
-
-  .workspace-intro {
-    min-inline-size: 0;
-    padding: clamp(1.25rem, 4vw, 3.5rem);
-    border-radius: 1rem;
-    background:
-      repeating-linear-gradient(90deg, #9be3d11a 0 1px, transparent 1px 28px),
-      repeating-linear-gradient(#9be3d11a 0 1px, transparent 1px 28px),
-      linear-gradient(120deg, #172d2a, #28524a);
-    color: #f0f9f4;
-  }
-
-  .workspace-intro h1 { margin-block-end: .65rem; font-size: clamp(2.1rem, 7vw, 5.5rem); }
-  .workspace-intro em { color: #a9f0db; font-family: Georgia, serif; font-weight: 400; }
-  .workspace-intro p { max-inline-size: 37ch; color: #d2e7df; }
 
   .workspace-shell {
     grid-template-columns: minmax(8rem, .22fr) minmax(0, 1fr);
@@ -83,7 +68,7 @@
     padding: calc(var(--space) * .65);
     border: 1px solid var(--workspace-line);
     border-radius: .55rem;
-    background: #e9f2ed;
+    background: var(--field-tint);
   }
   .workspace-metrics p { color: var(--workspace-muted); font-size: .79rem; }
   .workspace-metrics strong { font-size: 1.85rem; font-weight: 550; font-variant-numeric: tabular-nums; }

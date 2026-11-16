@@ -8,7 +8,7 @@
 
 **How far can a polished, accessible web application go without a component library or animation library?**
 
-The project answers that question with a wireframe / technical-blueprint visual language: white space, graphite, restrained greys, construction lines, semantic labels, and live interactive specimens.
+The project answers that question with a wireframe / technical-blueprint visual language: white space, graphite, restrained greys, construction lines, semantic labels, and live interactive specimens. See the [design language](docs/design-language.md) for examples and guidance.
 
 ## Product shape
 
@@ -20,6 +20,7 @@ The app will be a real multipage experience rather than a single demo canvas:
 - **Component detail** — isolated component behavior, fallbacks, and implementation notes.
 - **Playground** — a small native Canvas experiment using pointer input and animation frames.
 - **Preferences** — motion, contrast, density, and other user-facing settings.
+- **Create** — arrange and test responsive wireframes from Blueprint patterns.
 
 ## Inspectable by design
 
@@ -69,7 +70,7 @@ Scroll-driven animations, scroll-state container queries, anchored container que
 
 ## Status
 
-The first version includes six static pages, a responsive component library, an interactive canvas and locally stored preferences. The **Render**, **Wireframe**, and **Inspect** controls appear on every page and retain the current mode as you navigate. On the Components page, choose **Inspect a specimen** to open the Reference Dock. Use its arrows to switch between the responsive card, native dialog, and layer shift without navigating. The dock sits beside the live page on desktop and opens as a modal sheet on narrow screens. Each record lists the semantic element, support tier, fallback, source, and documentation. Wireframe shows live grid tracks for the responsive card and Library grid. Open either grid’s reference in Inspect to see its measured width, tracks, and gaps. For the responsive card, the dock also shows the active layout and its breakpoint.
+The app includes seven static routes, a responsive component library, an interactive canvas and locally stored preferences. The **Render**, **Wireframe**, and **Inspect** controls appear on every page and retain the current mode as you navigate. On the Components page, choose **Inspect a specimen** to open the Reference Dock. Use its arrows to switch between the responsive card, native dialog, and layer shift without navigating. The dock sits beside the live page on desktop and opens as a modal sheet on narrow screens. Each record lists the semantic element, support tier, fallback, source, and documentation. Wireframe shows live grid tracks for the responsive card and Library grid. Open either grid’s reference in Inspect to see its measured width, tracks, and gaps. For the responsive card, the dock also shows the active layout and its breakpoint.
 
 In the responsive card, native dialog, and layer-shift records, **Show fallback** lets you try the same layout, disclosure, or static state the app uses when an enhancement is unavailable or reduced motion applies. The dock explains which condition is active. On a phone, close the dock to try the specimen, then reopen it to change the simulation.
 
@@ -77,11 +78,17 @@ Library cards lead directly to live specimens or their research. Live links open
 
 To add a shareable specimen, define its dock record in `src/inspect-records.ts` and map a stable ID to its page and record in `src/specimen-registry.ts`. Put that ID and `data-specimen-id` on the destination section, mark the highlight with `data-inspect-target`, and leave a `data-inspect-controls` container for the Inspect button. Use `<a data-specimen-link="your-id">` for Library or Home cards. Vite emits ordinary links from the registry in dev and production. For a local inspection target without a shareable URL, the wrapper can use `data-inspect-record` directly.
 
-All pages include a chromatic aberration experiment using [HTML-in-Canvas](https://developer.chrome.com/docs/web-platform/html-in-canvas). Open the bottom-right control to adjust the RGB channel split (0 removes it), or choose **Use normal HTML** to restore ordinary DOM rendering. On supporting browsers, the whole page's real HTML is drawn into a canvas; unsupported browsers and rendering errors retain ordinary HTML. The effect redraws on demand. The only animation is a short glitch (shake, wider channel split and torn rows) when following a link to another page of the app, which settles on arrival. Reduced motion, from the system or the Preferences page, skips it. Browser interaction, accessibility, and performance on long pages still need browser verification. The implementation targets the current `content="drawable"` / `drawable` API rather than the older `layoutsubtree` prototype.
+The original six routes include a chromatic aberration experiment using [HTML-in-Canvas](https://developer.chrome.com/docs/web-platform/html-in-canvas). Open the bottom-right control to adjust the RGB channel split (0 removes it), or choose **Use normal HTML** to restore ordinary DOM rendering. On supporting browsers, the whole page's real HTML is drawn into a canvas; unsupported browsers and rendering errors retain ordinary HTML. The effect redraws on demand. The only animation is a short glitch (shake, wider channel split and torn rows) when following a link to another page of the app, which settles on arrival. Reduced motion, from the system or the Preferences page, skips it. Browser interaction, accessibility, and performance on long pages still need browser verification. The implementation targets the current `content="drawable"` / `drawable` API rather than the older `layoutsubtree` prototype.
 
 This expands the Playground scope of [issue #5](https://github.com/josuecm13/web-platform-blueprint/issues/5) to the whole page at the project owner's request. It does not complete that issue's Reference Dock or browser verification requirements. See [implementation and validation notes](docs/html-in-canvas.md).
 
 Workspace offers **Empty**, **Typical**, and **Crowded** datasets. Search or sort the activity table, change the project density in Preferences, and use Inspect to see how the overview grid and scrollable table handle the available space.
+
+## Layout Studio
+
+Open **Create** to arrange browser-native patterns on an interactive wireframe. Drag elements from the palette, move an existing element with its canvas handle, or use the add and move buttons. Drop elements inside a **Layout group**, then choose a stack or a row that responds to the group’s own width. Switch to phone width to see grids reflow. Tune the scroll range and intensity of rise, fade, and scale effects, then use the scrubber or scroll the canvas. **Static preview** shows the same fallback used when scroll timelines are unavailable or reduced motion is requested.
+
+In **Workflow**, describe the UX philosophy and generate a reusable prompt for a sibling layout or the next step. Next-step layouts can be tested from the source action in the canvas. Layouts save locally.
 
 ## Run locally
 

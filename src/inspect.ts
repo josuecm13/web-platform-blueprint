@@ -1,11 +1,12 @@
 import './inspect.css';
-import { isRecordKey, records } from './inspect-records';
-import { layoutDetails, measuredLayouts } from './layout-measurements';
+import { isRecordKey, records, type InspectRecordKey } from './inspect-records';
+import { layoutDetails, measuredLayouts, watchPreviewGrid } from './layout-measurements';
 import { isLiveSpecimenId, liveSpecimens } from './specimen-registry';
 import { specimenFallbacks } from './specimens';
 
 const modes = ['render', 'wireframe', 'inspect'] as const;
-type Mode = typeof modes[number];
+export type Mode = typeof modes[number];
+const toolbarMount = document.querySelector<HTMLElement>('[data-display-modes]');
 
 const toolbar = document.createElement('div');
 toolbar.className = 'inspect-toolbar';
@@ -89,7 +90,8 @@ dockContent.innerHTML = `
   </div>`;
 
 dock.append(dockContent);
-document.body.append(toolbar, dock, sheet);
+(toolbarMount ?? document.body).append(toolbar);
+document.body.append(dock, sheet);
 const mobile = matchMedia('(max-width: 56rem)');
 const nativePopover = typeof dock.showPopover === 'function' && typeof dock.hidePopover === 'function';
 const nativeDialog = typeof sheet.showModal === 'function';
@@ -134,7 +136,15 @@ const specimens = [...document.querySelectorAll<HTMLElement>('[data-inspect-reco
   return [{ id, section: specimen, record: records[key], target, trigger }];
 });
 
-type Specimen = typeof specimens[number];
+type Specimen = {
+  id?: string;
+  section: HTMLElement;
+  record: (typeof records)[InspectRecordKey];
+  target: HTMLElement;
+  trigger: HTMLElement;
+  related?: { label: string; url: string };
+  preview?: { grid?: HTMLElement };
+};
 type Presentation = 'sheet' | 'popover' | 'fixed';
 let selected: Specimen | undefined;
 let invoker: HTMLElement | undefined;
@@ -144,7 +154,7 @@ let openedFromFragment = false;
 
 const root = document.documentElement;
 let current: Mode = 'render';
-function setMode(mode: Mode) {
+export function setMode(mode: Mode) {
   if (mode !== 'inspect') dismissReference(false);
   current = mode;
   root.dataset.inspectMode = mode;
@@ -152,6 +162,7 @@ function setMode(mode: Mode) {
     button.setAttribute('aria-pressed', String(button.dataset.mode === mode));
   }
   try { sessionStorage.setItem('blueprint-inspect-mode', mode); } catch { /* Storage is optional. */ }
+  root.dispatchEvent(new CustomEvent('blueprint-display-mode', { detail: mode }));
 }
 
 function activePresentation(): Presentation {
@@ -161,7 +172,8 @@ function activePresentation(): Presentation {
 
 function syncTriggerControls() {
   const forSheet = activePresentation() === 'sheet';
-  for (const { trigger } of specimens) {
+  const triggers = new Set([...specimens.map(specimen => specimen.trigger), ...(selected ? [selected.trigger] : [])]);
+  for (const trigger of triggers) {
     trigger.setAttribute('aria-controls', forSheet ? sheet.id : dock.id);
     if (forSheet) trigger.setAttribute('aria-haspopup', 'dialog');
     else trigger.removeAttribute('aria-haspopup');
@@ -233,6 +245,8 @@ document.addEventListener('specimen-fallback-change', event => {
 function renderReference(specimen: Specimen) {
   clearSelection();
   selected = specimen;
+  paging.hidden = specimens.length < 2 || Boolean(specimen.preview);
+  syncTriggerControls();
   specimen.target.classList.add('inspect-selected');
   specimen.trigger.setAttribute('aria-expanded', 'true');
   const record = specimen.record;
@@ -240,10 +254,12 @@ function renderReference(specimen: Specimen) {
   shareUrl.hidden = true;
   shareStatus.textContent = '';
   updateFallbackPreview();
-  const layout = measuredLayouts.get(specimen.target);
-  layoutSection.hidden = !layout;
-  if (layout) {
-    unsubscribeLayout = layout.subscribe(snapshot => {
+  const existing = measuredLayouts.get(specimen.target);
+  const grid = specimen.preview?.grid;
+  const subscribe = existing?.subscribe ?? (grid ? (callback: Parameters<typeof watchPreviewGrid>[1]) => watchPreviewGrid(grid, callback) : undefined);
+  layoutSection.hidden = !subscribe;
+  if (subscribe) {
+    unsubscribeLayout = subscribe(snapshot => {
       const fields = layoutDetails(snapshot);
       for (const [index, [label, value]] of fields.entries()) {
         let row = layoutList.children[index];
@@ -279,12 +295,15 @@ function renderReference(specimen: Specimen) {
     item.append(code);
     return item;
   }));
-  links.replaceChildren(...record.docs.map(doc => {
+  const documentation = specimen.related ? [specimen.related, ...record.docs] : record.docs;
+  links.replaceChildren(...documentation.map(doc => {
     const item = document.createElement('li');
     const link = document.createElement('a');
     link.href = doc.url;
-    link.target = '_blank';
-    link.rel = 'noopener noreferrer';
+    if (doc !== specimen.related) {
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+    }
     const arrow = document.createElement('span');
     arrow.setAttribute('aria-hidden', 'true');
     arrow.textContent = '→';
@@ -316,7 +335,7 @@ if (start && specimens.length) {
   });
 }
 
-if (!specimens.length) {
+if (!specimens.length && !toolbarMount) {
   const link = document.createElement('a');
   link.className = 'inspect-empty-link';
   link.href = document.querySelector<HTMLAnchorElement>('.site-header nav a[href$="components/"]')?.href ?? '../components/';
@@ -328,7 +347,9 @@ paging.hidden = specimens.length < 2;
 paging.querySelectorAll<HTMLButtonElement>('[data-step]').forEach(button => {
   button.addEventListener('click', () => {
     if (!selected) return;
-    const index = specimens.indexOf(selected) + Number(button.dataset.step);
+    const selectedIndex = specimens.findIndex(specimen => specimen === selected);
+    if (selectedIndex === -1) return;
+    const index = selectedIndex + Number(button.dataset.step);
     const next = specimens[(index + specimens.length) % specimens.length];
     renderReference(next);
     if (!mobile.matches) {
@@ -401,3 +422,20 @@ function openLinkedSpecimen() {
 
 window.addEventListener('hashchange', openLinkedSpecimen);
 openLinkedSpecimen();
+
+/** Open the shared dock for a generated section whose DOM lives in a preview frame. */
+export function inspectPreview(key: InspectRecordKey, section: HTMLElement, trigger: HTMLElement, options: {
+  related?: Specimen['related'];
+  grid?: HTMLElement;
+} = {}) {
+  setMode('inspect');
+  openReference({ section, target: section, trigger, record: records[key], related: options.related, preview: { grid: options.grid } }, trigger);
+}
+
+export function closePreviewReference() {
+  if (selected?.preview) dismissReference(false);
+}
+
+export function displayMode() {
+  return current;
+}

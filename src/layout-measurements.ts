@@ -47,6 +47,47 @@ export function layoutDetails(layout: LayoutSnapshot) {
   ];
 }
 
+function readGridLayout(grid: HTMLElement, container = grid, breakpoint?: number): LayoutSnapshot {
+  const view = grid.ownerDocument.defaultView!;
+  const gridStyle = view.getComputedStyle(grid);
+  const containerStyle = container === grid ? gridStyle : view.getComputedStyle(container);
+  const inlineInsets = number(containerStyle.paddingLeft) + number(containerStyle.paddingRight)
+    + number(containerStyle.borderLeftWidth) + number(containerStyle.borderRightWidth);
+
+  return {
+    width: Math.max(0, container.getBoundingClientRect().width - inlineInsets),
+    columns: gridTracks(gridStyle.gridTemplateColumns),
+    rows: gridTracks(gridStyle.gridTemplateRows),
+    columnGap: number(gridStyle.columnGap),
+    rowGap: number(gridStyle.rowGap),
+    breakpoint,
+  };
+}
+
+/** Read a generated grid without attaching a measurement overlay to its page. */
+export function watchPreviewGrid(grid: HTMLElement, callback: (layout: LayoutSnapshot) => void) {
+  let lastSignature = '';
+  function update() {
+    const layout = readGridLayout(grid);
+    const signature = JSON.stringify(layout);
+    if (lastSignature === signature) return;
+    lastSignature = signature;
+    callback(layout);
+  }
+
+  update();
+  if (typeof ResizeObserver === 'function') {
+    const observer = new ResizeObserver(update);
+    observer.observe(grid);
+    for (const item of grid.children) observer.observe(item);
+    return () => observer.disconnect();
+  }
+
+  const view = grid.ownerDocument.defaultView!;
+  view.addEventListener('resize', update);
+  return () => view.removeEventListener('resize', update);
+}
+
 function trackLayer(axis: 'columns' | 'rows') {
   const layer = document.createElement('div');
   layer.className = `measurement-tracks measurement-${axis}`;
@@ -81,24 +122,8 @@ function observeGrid(grid: HTMLElement) {
   grid.append(overlay);
 
   let lastSignature = '';
-  function read(): LayoutSnapshot {
-    const gridStyle = getComputedStyle(grid);
-    const containerStyle = container === grid ? gridStyle : getComputedStyle(container);
-    const inlineInsets = number(containerStyle.paddingLeft) + number(containerStyle.paddingRight)
-      + number(containerStyle.borderLeftWidth) + number(containerStyle.borderRightWidth);
-
-    return {
-      width: Math.max(0, container.getBoundingClientRect().width - inlineInsets),
-      columns: gridTracks(gridStyle.gridTemplateColumns),
-      rows: gridTracks(gridStyle.gridTemplateRows),
-      columnGap: number(gridStyle.columnGap),
-      rowGap: number(gridStyle.rowGap),
-      breakpoint,
-    };
-  }
-
   function update() {
-    const layout = read();
+    const layout = readGridLayout(grid, container, breakpoint);
     const signature = JSON.stringify(layout);
     if (signature === lastSignature) return layout;
     lastSignature = signature;
