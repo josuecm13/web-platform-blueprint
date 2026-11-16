@@ -6,6 +6,7 @@ import { iconMarkup, mountIcons } from './icons';
 import { allBlocks, block, buildPrompt, copyBlock, insertion, limit, loadProject, locate, patterns, presets, saveProject, sheet,
   type Block, type Placement, type Pattern, type Preset, type Project, type Sheet } from './model';
 import { createCanvas } from './preview';
+import { bindSavedLayouts } from './saved-layouts';
 import { outlineMarkup, propertiesMarkup } from './structure-view';
 
 const get = <T extends HTMLElement = HTMLElement>(selector: string) => document.querySelector<T>(selector)!;
@@ -383,6 +384,12 @@ document.documentElement.addEventListener('blueprint-display-mode', event => {
   showMotionStatus();
 });
 reduced.addEventListener('change', showMotionStatus);
+
+bindSavedLayouts(get('#database-dialog'), get('#database-trigger'), () => project, saved => {
+  commit(() => { project = saved; });
+  open(current());
+  notify('Database project opened. Undo restores your previous workspace.');
+});
 
 scrubber.addEventListener('input', () => canvas.scrub(scrubber.valueAsNumber));
 mountIcons(document);

@@ -90,11 +90,25 @@ Open **Create** to arrange browser-native patterns on an interactive wireframe. 
 
 In **Workflow**, describe the UX philosophy and generate a reusable prompt for a sibling layout or the next step. Next-step layouts can be tested from the source action in the canvas. Layouts save locally.
 
+### Local SQLite API
+
+Layout Studio keeps its browser autosave. With the Vite development or built-site preview server running, open **Saved projects** to save a named database copy or reopen one. A copy contains the complete workspace, including groups, motion settings, and linked layouts. Reopening a copy is undoable.
+
+| Method | Endpoint | Response |
+| --- | --- | --- |
+| `GET` | `/api/layouts` | Up to 100 recent copies, newest first. |
+| `POST` | `/api/layouts` | Saves a new copy from `{ "name": "...", "project": { "active": "...", "sheets": [...] } }`. Returns its ID and a `Location` header. |
+| `GET` | `/api/layouts/:id` | One saved project, including its layout data. |
+| `GET` | `/api/components` | Homepage component records with links to their sections. |
+| `GET` | `/api/references` | Reference links keyed to their homepage components. |
+
+The first API request creates `.blueprint/blueprint.sqlite` and seeds the homepage catalog. Set `BLUEPRINT_DB_PATH` to select another file. The API is for local use on loopback hosts. A static deployment of `dist/` still runs the site and browser autosave. Hosting a shared API would require authentication and a durable database volume.
+
 ## Run locally
 
-Requires Node.js. Run `npm install`, then `npm run dev` for development or `npm run build` followed by `npm run preview` for a production preview.
+Requires Node.js 24 or newer. Run `npm install`, then `npm run dev` for development or `npm run build` followed by `npm run preview` for a production preview.
 
-Run `node --test tests/chromatic.test.mjs` for the canvas model tests. For the Inspect mode browser checks, run `npx playwright install chromium` and then `npm run test:browser`.
+Run `node --test tests/chromatic.test.mjs tests/sqlite.test.mjs` for the canvas model and SQLite API tests. For the Inspect mode browser checks, run `npx playwright install chromium` and then `npm run test:browser`.
 
 The application uses real HTML documents and ordinary links. Core content and navigation remain available without JavaScript; filtering, canvas interaction and preference persistence progressively enhance the experience.
 

@@ -1,11 +1,12 @@
 import { defineConfig } from 'vite';
 import { dirname, relative, resolve, sep } from 'node:path';
+import { blueprintApi } from './server/vite-api.mjs';
 import { specimenLink } from './src/specimen-registry.ts';
 
 const root = resolve('.');
 export default defineConfig({
   base: './',
-  plugins: [{
+  plugins: [blueprintApi(), {
     name: 'resolve-specimen-links',
     transformIndexHtml: {
       order: 'pre',

@@ -83,14 +83,18 @@ export function copyBlock(item: Block): Block {
   return { ...item, id: id(), ...(item.children ? { children: item.children.map(copyBlock) } : {}) };
 }
 
+const validId = (value: unknown): value is string => typeof value === 'string' && /^[a-z0-9-]{1,100}$/.test(value);
+const limitedText = (value: unknown, max: number) => typeof value === 'string' && value.length <= max;
+const enumValue = (value: unknown, options: object) => typeof value === 'string' && Object.hasOwn(options, value);
+
 function validBlocks(input: Block[], validId: (value: unknown) => boolean, seen = new Set<string>()): boolean {
   return Array.isArray(input) && input.every(item => {
     if (!item || !validId(item.id) || seen.has(item.id) || seen.size >= maximum
-      || !Object.hasOwn(patterns, item.kind) || !Object.hasOwn(effects, item.effect)
-      || !Object.hasOwn(spacings, item.spacing) || ![2, 3, 4].includes(item.columns)
-      || (item.arrangement !== undefined && !Object.hasOwn(arrangements, item.arrangement))
-      || (item.range !== undefined && !Object.hasOwn(ranges, item.range))
-      || (item.intensity !== undefined && !Object.hasOwn(intensities, item.intensity))) return false;
+      || !enumValue(item.kind, patterns) || !enumValue(item.effect, effects)
+      || !enumValue(item.spacing, spacings) || ![2, 3, 4].includes(item.columns)
+      || (item.arrangement !== undefined && !enumValue(item.arrangement, arrangements))
+      || (item.range !== undefined && !enumValue(item.range, ranges))
+      || (item.intensity !== undefined && !enumValue(item.intensity, intensities))) return false;
     seen.add(item.id);
     return item.kind === 'group' ? validBlocks(item.children!, validId, seen) : item.children === undefined;
   });
@@ -100,13 +104,24 @@ export function sheet(name: string, preset: Preset): Sheet {
   return { id: id(), name, philosophy: '', blocks: presets[preset].blocks.map(block) };
 }
 
+export function isProject(input: unknown): input is Project {
+  const saved = input as Project | null;
+  if (!saved || !validId(saved.active) || !Array.isArray(saved.sheets) || !saved.sheets.length || saved.sheets.length > maximum) return false;
+  if (!saved.sheets.every(item => item && validId(item.id) && limitedText(item.name, 90)
+    && limitedText(item.philosophy, 1800) && validBlocks(item.blocks, validId)
+    && (item.next === undefined || validId(item.next))
+    && (item.origin === undefined || (item.origin && validId(item.origin.id) && limitedText(item.origin.handoff, 1200)
+      && (item.origin.relation === 'sibling' || item.origin.relation === 'next'))))) return false;
+  const ids = new Set(saved.sheets.map(item => item.id));
+  return ids.size === saved.sheets.length && ids.has(saved.active) && saved.sheets.every(item =>
+    (!item.next || item.next !== item.id && ids.has(item.next))
+    && (!item.origin || item.origin.id !== item.id && ids.has(item.origin.id)));
+}
+
 export function loadProject(): Project {
   try {
-    const saved: Project = JSON.parse(localStorage.getItem(key) ?? 'null');
-    const validId = (value: unknown) => typeof value === 'string' && /^[a-z0-9-]+$/.test(value);
-    if (saved?.sheets.length && saved.sheets.length <= maximum && saved.sheets.some(item => item.id === saved.active)
-      && saved.sheets.every(item => validId(item.id) && typeof item.name === 'string' && typeof item.philosophy === 'string'
-        && validBlocks(item.blocks, validId))) return saved;
+    const saved: unknown = JSON.parse(localStorage.getItem(key) ?? 'null');
+    if (isProject(saved)) return saved;
   } catch { /* The starter canvas is available without storage. */ }
   const starter = sheet('Landing layout', 'landing');
   starter.philosophy = 'Lead with one clear region. Keep supporting detail collapsible and preserve reading order at narrow widths.';
