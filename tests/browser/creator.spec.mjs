@@ -182,3 +182,28 @@ test('tune a scroll effect and scrub the canvas, then compare the static view', 
   await expect(effect).toHaveCSS('animation-range-start', 'entry 45%');
   await expect(effect).toHaveCSS('--rise', '3.5rem');
 });
+
+test('save a named workspace to SQLite and reopen it in a fresh browser context', async ({ page, browser, request }) => {
+  await open(page);
+  await palette(page).getByRole('button', { name: 'Media slot' }).click();
+  await expect(blocks(page)).toHaveCount(6);
+  await page.getByRole('button', { name: 'Saved projects' }).click();
+  await page.getByRole('textbox', { name: 'Database copy name' }).fill('SQLite layout study');
+  await page.getByRole('button', { name: 'Save to database' }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Saved a database copy' })).toBeVisible();
+  const response = await request.get('/api/components');
+  const { components } = await response.json();
+  expect(components.map(component => component.path)).toContain('/#native-disclosure');
+  const fresh = await browser.newContext({ baseURL: page.url() });
+  try {
+    const restored = await fresh.newPage();
+    await open(restored);
+    await restored.getByRole('button', { name: 'Saved projects' }).click();
+    await restored.getByRole('button', { name: 'SQLite layout study', exact: true }).click();
+    await expect(blocks(restored)).toHaveCount(6);
+    await restored.getByRole('button', { name: 'Undo' }).click();
+    await expect(blocks(restored)).toHaveCount(5);
+  } finally {
+    await fresh.close();
+  }
+});

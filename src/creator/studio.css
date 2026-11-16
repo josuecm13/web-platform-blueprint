@@ -91,3 +91,19 @@ html[data-inspect-mode="wireframe"] .studio-shell :is(section,aside,header) { ou
 .studio-shell label.scrubber { display:flex; align-items:center; gap:.4rem; flex:1 1 12rem; max-width:24rem; }
 .studio-shell .scrubber input { padding:0; width:auto; flex:1; accent-color:var(--accent); }
 .scrubber output { min-width:2.4rem; text-align:end; font-variant-numeric:tabular-nums; }
+#database-dialog {
+  color:var(--ink);
+  width:min(calc(100% - 2rem),32rem);
+  max-block-size:min(85dvh,42rem);
+  border:1px solid var(--studio-line);
+  border-radius:.75rem;
+  background:var(--paper);
+  padding:0;
+}
+#database-dialog > :is(form,ul,p) { margin:.8rem; }
+#save-project { display:flex; align-items:end; flex-wrap:wrap; gap:.55rem; }
+#save-project label { flex:1 1 10rem; }
+#saved-projects { padding:0; display:grid; gap:.4rem; list-style:none; }
+#saved-projects li { display:flex; align-items:center; justify-content:space-between; gap:.5rem; }
+#saved-projects button { text-align:start; overflow-wrap:anywhere; }
+#saved-projects small, #database-status { color:var(--muted); font-size:.78rem; }

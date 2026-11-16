@@ -33,7 +33,8 @@
           <button type="button" id="tab-canvas" role="tab" aria-selected="true" aria-controls="compose" data-action="compose" data-icon="layout">Canvas</button>
           <button type="button" id="tab-workflow" role="tab" aria-selected="false" aria-controls="workflow" data-action="workflow" data-icon="branch" tabindex="-1">Workflow</button>
         </div>
-        <div class="studio-segments history" role="group" aria-label="History">
+        <div class="studio-segments history" role="group" aria-label="Workspace actions">
+          <button type="button" id="database-trigger" aria-haspopup="dialog">Saved projects</button>
           <button type="button" data-action="undo" data-icon="undo" aria-label="Undo"></button>
           <button type="button" data-action="redo" data-icon="redo" aria-label="Redo"></button>
         </div>
@@ -91,6 +92,18 @@
       </div>
       <div class="studio-status"><span id="save-status">Saved on this device</span><span role="status" id="feedback"></span></div>
     </div>
+    <dialog id="database-dialog" aria-labelledby="database-title">
+      <header class="panel-head">
+        <h2 id="database-title">Saved projects</h2>
+        <form method="dialog"><button type="submit">Close</button></form>
+      </header>
+      <form id="save-project">
+        <label>Database copy name<input type="text" name="name" maxlength="90" required></label>
+        <button class="primary" type="submit">Save to database</button>
+      </form>
+      <ul id="saved-projects" aria-label="Database projects"></ul>
+      <p id="database-status" role="status"></p>
+    </dialog>
     <dialog id="new-dialog" aria-labelledby="new-title">
       <form id="new-layout">
         <h2 id="new-title">New layout</h2>
